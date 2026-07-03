@@ -2,7 +2,7 @@
 
 > AI usage and cost tracking for Claude Code, GitHub Copilot, and Gemini CLI - fully local.
 
-A VS Code extension that tracks **token usage for Claude Code, GitHub Copilot, and Gemini CLI** in one place. LedgerLM is token-first, with cost shown only when the data is reliable. It includes a unified dashboard, time-window filtering, token/cache deep dives, cache-break impact, budgets, live updates, and CSV/JSON export.
+A VS Code extension that tracks **token usage for Claude Code, GitHub Copilot, and Gemini CLI** in one place. LedgerLM is token-first, with cost shown only when the data is reliable. It includes a tabbed dashboard (Overview / Sessions / Models / Agents & Tools), time-window filtering, token/cache deep dives, cache-break impact, agent & tool usage analytics, budgets, live updates, and CSV/JSON export.
 
 ![LedgerLM dashboard - unified token, cache, and cost analytics for Claude Code, GitHub Copilot, and Gemini CLI](https://raw.githubusercontent.com/tatsat3mutee/ledgerlm/main/media/dashboard-dark.png)
 
@@ -34,6 +34,13 @@ A VS Code extension that tracks **token usage for Claude Code, GitHub Copilot, a
 ### Sessions
 - **Latest Session** panel - most recent session's stats + per-model mini-table, auto-refreshing.
 - **All sessions** - sortable columns; **click a row** to expand an inline per-model breakdown. `sub` / `⚠` badges.
+
+### Agents, tools, skills & hooks
+- **Subagents** - which agents ran (and how often, across how many sessions).
+- **Tools** - per-tool call counts, error counts, and average execution time.
+- **Skills & hooks** - skill invocations and hook executions with timing, so you can spot slow hooks.
+
+![LedgerLM Agents & Tools tab - subagent, tool, skill, and hook usage analytics](https://raw.githubusercontent.com/tatsat3mutee/ledgerlm/main/media/agents-tools.png)
 
 ### Cost - only when trustworthy
 - **Copilot** -> premium-request **AI credits** (`copilotUsageNanoAiu`, $0.01/credit). `≥` marks a floor when some calls predate the credit field.
