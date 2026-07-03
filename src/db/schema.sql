@@ -1,4 +1,4 @@
--- TokenLens — unified SQLite schema (source-agnostic).
+-- LedgerLM — unified SQLite schema (source-agnostic).
 -- One row per session, one row per LLM call, across both Claude Code and Copilot.
 
 CREATE TABLE IF NOT EXISTS sessions (
@@ -65,3 +65,20 @@ CREATE TABLE IF NOT EXISTS budget_alerts (
   period_key TEXT PRIMARY KEY,     -- e.g. 'day:2026-06-12:usd' | 'week:2026-W24:usd'
   notified_at INTEGER DEFAULT (strftime('%s','now'))
 );
+
+-- Aggregated agent/tool/skill/hook usage per session (from tool_call, hook,
+-- child_session_ref events in Copilot logs and tool_use blocks in Claude Code logs).
+CREATE TABLE IF NOT EXISTS tool_usage (
+  session_id TEXT NOT NULL,
+  source TEXT NOT NULL,
+  kind TEXT NOT NULL,              -- 'tool' | 'hook' | 'subagent' | 'skill'
+  name TEXT NOT NULL,              -- tool/hook/agent/skill name
+  calls INTEGER DEFAULT 0,
+  errors INTEGER DEFAULT 0,        -- invocations with a non-ok status
+  total_dur_ms INTEGER DEFAULT 0,  -- summed duration when the log reports it
+  last_ts INTEGER,                 -- unix seconds of the most recent invocation
+  PRIMARY KEY (session_id, kind, name),
+  FOREIGN KEY (session_id) REFERENCES sessions(session_id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_tool_usage_kind ON tool_usage(kind);
+CREATE INDEX IF NOT EXISTS idx_tool_usage_name ON tool_usage(name);

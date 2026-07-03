@@ -2,14 +2,14 @@
  * @fileoverview Resolve the Claude Code projects directory.
  *
  * Default: ~/.claude/projects. Honors $CLAUDE_CONFIG_DIR and an explicit override
- * (the tokenLens.claudeCodeHome setting, passed in).
+ * (the ledgerLM.claudeCodeHome setting, passed in).
  */
 
 const fs = require('fs');
 const path = require('path');
 
 /**
- * @param {string} [override] - tokenLens.claudeCodeHome (a .claude home dir), optional.
+ * @param {string} [override] - ledgerLM.claudeCodeHome (a .claude home dir), optional.
  * @returns {string|null} absolute path to the projects dir, or null if absent.
  */
 function getClaudeProjectsDir(override) {

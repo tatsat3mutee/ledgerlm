@@ -66,7 +66,7 @@ function readWorkspacePath(wsJsonPath) {
  * @returns {{title:string|null, calls:Array, models:string[], firstTs:number|null, lastTs:number|null}}
  */
 function parse(mainJsonlPath) {
-  const result = { title: null, calls: [], models: [], firstTs: null, lastTs: null };
+  const result = { title: null, calls: [], models: [], firstTs: null, lastTs: null, toolUsage: [] };
   let content;
   try {
     content = fs.readFileSync(mainJsonlPath, 'utf-8');
@@ -74,6 +74,19 @@ function parse(mainJsonlPath) {
     return result;
   }
   const models = new Set();
+  const usage = new Map(); // 'kind:name' -> {kind,name,calls,errors,totalDurMs,lastTs}
+
+  const recordUsage = (kind, name, ev) => {
+    if (!name) return;
+    const key = kind + ':' + name;
+    let u = usage.get(key);
+    if (!u) { u = { kind, name, calls: 0, errors: 0, totalDurMs: 0, lastTs: null }; usage.set(key, u); }
+    u.calls += 1;
+    if (ev.status && ev.status !== 'ok') u.errors += 1;
+    if (typeof ev.dur === 'number') u.totalDurMs += ev.dur;
+    const tsSec = ev.ts ? Math.floor(ev.ts / 1000) : null;
+    if (tsSec != null && (u.lastTs == null || tsSec > u.lastTs)) u.lastTs = tsSec;
+  };
 
   for (const line of content.split('\n')) {
     if (!line.trim()) continue;
@@ -82,6 +95,14 @@ function parse(mainJsonlPath) {
 
     if (ev.type === 'user_message' && !result.title) {
       result.title = firstText(ev.attrs && (ev.attrs.text || ev.attrs.message || ev.attrs.content));
+    }
+
+    if (ev.type === 'tool_call') { recordUsage('tool', ev.name || (ev.attrs && ev.attrs.name), ev); continue; }
+    if (ev.type === 'hook') { recordUsage('hook', ev.name || (ev.attrs && ev.attrs.name), ev); continue; }
+    if (ev.type === 'child_session_ref') {
+      const label = (ev.attrs && ev.attrs.label) || ev.name;
+      if (label && label !== 'title') recordUsage('subagent', label, ev);
+      continue;
     }
 
     if (ev.type !== 'llm_request' || !ev.attrs) continue;
@@ -112,6 +133,7 @@ function parse(mainJsonlPath) {
   }
 
   result.models = [...models];
+  result.toolUsage = [...usage.values()];
   return result;
 }
 

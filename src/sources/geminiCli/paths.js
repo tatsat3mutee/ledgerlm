@@ -5,14 +5,14 @@
  *   ~/.gemini/tmp/<project_hash>/chats/session-<timestamp>-<shortid>.json|.jsonl
  *
  * Default home: ~/.gemini. Honors $GEMINI_CLI_HOME and an explicit override
- * (the tokenLens.geminiCliHome setting, passed in).
+ * (the ledgerLM.geminiCliHome setting, passed in).
  */
 
 const fs = require('fs');
 const path = require('path');
 
 /**
- * @param {string} [override] - tokenLens.geminiCliHome (a .gemini home dir), optional.
+ * @param {string} [override] - ledgerLM.geminiCliHome (a .gemini home dir), optional.
  * @returns {string|null} absolute path to the tmp dir (project hashes live under it), or null.
  */
 function getGeminiTmpDir(override) {

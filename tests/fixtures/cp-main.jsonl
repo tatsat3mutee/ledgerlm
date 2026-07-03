@@ -1,4 +1,8 @@
 {"ts":1777293700000,"type":"user_message","attrs":{"text":"set up the docker build"}}
 {"ts":1777293711570,"dur":13844,"type":"llm_request","name":"chat:claude-sonnet-4.6","status":"ok","attrs":{"model":"claude-sonnet-4.6","inputTokens":1000,"cachedTokens":800,"outputTokens":50,"ttft":4252}}
 {"ts":1777293730000,"type":"llm_request","status":"ok","attrs":{"model":"claude-sonnet-4.6","inputTokens":2000,"outputTokens":120}}
-{"ts":1777293740000,"type":"tool_call","attrs":{"name":"read_file"}}
+{"ts":1777293740000,"dur":12,"type":"tool_call","name":"read_file","status":"ok","attrs":{"name":"read_file"}}
+{"ts":1777293745000,"dur":30,"type":"tool_call","name":"read_file","status":"error","attrs":{"name":"read_file"}}
+{"ts":1777293750000,"dur":2200,"type":"hook","name":"SessionStart","status":"ok","attrs":{"command":"pwsh script.ps1"}}
+{"ts":1777293760000,"dur":0,"type":"child_session_ref","name":"Explore","status":"ok","attrs":{"childSessionId":"abc","label":"Explore"}}
+{"ts":1777293761000,"dur":0,"type":"child_session_ref","name":"title","status":"ok","attrs":{"childSessionId":"def","label":"title"}}

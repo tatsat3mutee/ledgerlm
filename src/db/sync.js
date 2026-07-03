@@ -15,7 +15,7 @@ const { computeCallCost } = require('../compute/cost');
 const { getClaudePricing, getGeminiPricing } = require('../compute/pricing');
 const log = require('../utils/logger');
 
-const PARSER_VERSION = 6; // bump to force a full re-sync when parsing logic changes
+const PARSER_VERSION = 7; // bump to force a full re-sync when parsing logic changes
 
 /**
  * Analyze cache breaks across a session's calls (in order). A break = a call that had a
@@ -179,6 +179,7 @@ function syncSession(db, d, config) {
 
   db.transaction(() => {
     db.run('DELETE FROM llm_calls WHERE session_id = $s', { $s: d.sessionId });
+    db.run('DELETE FROM tool_usage WHERE session_id = $s', { $s: d.sessionId });
     db.run('DELETE FROM sessions WHERE session_id = $s', { $s: d.sessionId });
 
     db.run(`INSERT INTO sessions (
@@ -234,6 +235,20 @@ function syncSession(db, d, config) {
         $credits: call.credits || 0,
         $est: isEstimate ? 1 : 0,
         $sub: call.isSubagent ? 1 : 0,
+      });
+    }
+
+    for (const u of (parsed.toolUsage || [])) {
+      db.run(`INSERT INTO tool_usage (session_id, source, kind, name, calls, errors, total_dur_ms, last_ts)
+        VALUES ($s, $src, $kind, $name, $calls, $errors, $dur, $ts)`, {
+        $s: d.sessionId,
+        $src: d.source,
+        $kind: u.kind,
+        $name: u.name,
+        $calls: u.calls,
+        $errors: u.errors || 0,
+        $dur: u.totalDurMs || 0,
+        $ts: u.lastTs,
       });
     }
 

@@ -58,7 +58,7 @@ function readProjectRoot(hashDir) {
 /**
  * Discover Gemini CLI sessions. Main sessions and their subagent files (matched
  * by shared short id or chats/<session-id>/ subdirectory) sync together.
- * @param {string} [override] tokenLens.geminiCliHome
+ * @param {string} [override] ledgerLM.geminiCliHome
  */
 function discover(override) {
   const tmpDir = getGeminiTmpDir(override);

@@ -10,7 +10,7 @@ Every session is tagged with a `cost_confidence`, and the dashboard renders cost
 |---|---|---|
 | `billed` | `$X.XX` | Real metered cost. Copilot calls that carry `copilotUsageNanoAiu` (premium-request credits). |
 | `partial` | `$X.XX ≥` | A **lower bound** — some calls in the session predate the credit field, so the true cost is at least this. |
-| `estimate` | `≈$X.XX est` | A modeled **API-equivalent** figure (Claude Code, Gemini CLI). You actually pay a flat subscription (or nothing on Gemini's free tier); this is "what the same tokens would cost on the API." Hide it with `tokenLens.showEstimatedCost: false`. |
+| `estimate` | `≈$X.XX est` | A modeled **API-equivalent** figure (Claude Code, Gemini CLI). You actually pay a flat subscription (or nothing on Gemini's free tier); this is "what the same tokens would cost on the API." Hide it with `ledgerLM.showEstimatedCost: false`. |
 | `none` | `—` | No trustworthy cost. Tokens are shown instead. |
 
 > Wrong cost is worse than no cost. We deliberately show `—` rather than a fabricated number.
@@ -38,7 +38,7 @@ cost = fresh_input·input
 ```
 
 - `input`/`output` are base $/Mtok per model family (Fable, Opus, Sonnet, Haiku), matched by substring of the model id.
-- Cache multipliers follow Anthropic's standard pricing (read 0.1×, 5-minute write 1.25×, 1-hour write 2× — selectable via `tokenLens.cacheWriteTtl`).
+- Cache multipliers follow Anthropic's standard pricing (read 0.1×, 5-minute write 1.25×, 1-hour write 2× — selectable via `ledgerLM.cacheWriteTtl`).
 - Unknown models (no family match — e.g. `<synthetic>` entries) contribute tokens but **$0**, and the session/model is flagged `⚠ no price`.
 
 These sessions are tagged `estimate`.

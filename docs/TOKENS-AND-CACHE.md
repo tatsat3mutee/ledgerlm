@@ -58,9 +58,9 @@ GitHub.copilot-chat/debug-logs/<session>/
 **How this extension differs and complements it:**
 
 - **Cache Explorer:** precise, structural, but only for the current/recent Copilot sessions and Copilot only.
-- **TokenLens:** token-count + file-reference heuristics (less byte-precise), but adds **historical persistence** (survives log cleanup, stored in SQLite), **cross-session aggregates** (cache-break counts and token impact over a time window), and **cross-tool coverage** (Claude Code, Copilot, *and* Gemini CLI in one view).
+- **LedgerLM:** token-count + file-reference heuristics (less byte-precise), but adds **historical persistence** (survives log cleanup, stored in SQLite), **cross-session aggregates** (cache-break counts and token impact over a time window), and **cross-tool coverage** (Claude Code, Copilot, *and* Gemini CLI in one view).
 
-Use Cache Explorer to debug *why a specific request* broke the cache; use TokenLens to see *patterns and totals* over time and across all your AI tools.
+Use Cache Explorer to debug *why a specific request* broke the cache; use LedgerLM to see *patterns and totals* over time and across all your AI tools.
 
 ### Roadmap
 

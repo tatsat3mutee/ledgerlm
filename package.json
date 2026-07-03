@@ -1,20 +1,20 @@
 {
-  "name": "tokenlens",
-  "displayName": "TokenLens - AI Usage & Cost",
+  "name": "ledgerlm",
+  "displayName": "LedgerLM - AI Usage & Cost",
   "description": "Local token usage and cache analytics for Claude Code, GitHub Copilot, and Gemini CLI. No cloud sync, no telemetry, and no outbound requests.",
-  "version": "0.7.3",
+  "version": "0.8.0",
   "publisher": "TatsatP",
   "license": "MIT",
   "icon": "media/icon.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/tatsat3mutee/tokenlens.git"
+    "url": "https://github.com/tatsat3mutee/ledgerlm.git"
   },
   "bugs": {
-    "url": "https://github.com/tatsat3mutee/tokenlens/issues"
+    "url": "https://github.com/tatsat3mutee/ledgerlm/issues"
   },
-  "homepage": "https://github.com/tatsat3mutee/tokenlens#readme",
-  "qna": "https://github.com/tatsat3mutee/tokenlens/issues",
+  "homepage": "https://github.com/tatsat3mutee/ledgerlm#readme",
+  "qna": "https://github.com/tatsat3mutee/ledgerlm/issues",
   "extensionKind": [
     "ui",
     "workspace"
@@ -50,33 +50,33 @@
   "contributes": {
     "commands": [
       {
-        "command": "tokenLens.openPanel",
-        "title": "TokenLens: Open Dashboard",
+        "command": "ledgerLM.openPanel",
+        "title": "LedgerLM: Open Dashboard",
         "icon": "$(graph)"
       },
       {
-        "command": "tokenLens.refresh",
-        "title": "TokenLens: Sync Now",
+        "command": "ledgerLM.refresh",
+        "title": "LedgerLM: Sync Now",
         "icon": "$(refresh)"
       },
       {
-        "command": "tokenLens.export",
-        "title": "TokenLens: Export Report (CSV/JSON)"
+        "command": "ledgerLM.export",
+        "title": "LedgerLM: Export Report (CSV/JSON)"
       }
     ],
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "tokenLens",
-          "title": "TokenLens",
+          "id": "ledgerLM",
+          "title": "LedgerLM",
           "icon": "media/sidebar.svg"
         }
       ]
     },
     "views": {
-      "tokenLens": [
+      "ledgerLM": [
         {
-          "id": "tokenLensPanel",
+          "id": "ledgerLMPanel",
           "name": "Dashboard",
           "type": "webview"
         }
@@ -84,64 +84,64 @@
     },
     "viewsWelcome": [
       {
-        "view": "tokenLensPanel",
-        "contents": "Open the local TokenLens dashboard for Claude Code, Copilot, and Gemini CLI usage.\n\n[$(graph) Open Dashboard](command:tokenLens.openPanel)"
+        "view": "ledgerLMPanel",
+        "contents": "Open the local LedgerLM dashboard for Claude Code, Copilot, and Gemini CLI usage.\n\n[$(graph) Open Dashboard](command:ledgerLM.openPanel)"
       }
     ],
     "configuration": {
-      "title": "TokenLens",
+      "title": "LedgerLM",
       "properties": {
-        "tokenLens.sources": {
+        "ledgerLM.sources": {
           "type": "array",
           "items": { "type": "string", "enum": ["claudeCode", "copilot", "geminiCli"] },
           "default": ["claudeCode", "copilot", "geminiCli"],
           "description": "Which AI tools to track."
         },
-        "tokenLens.autoSyncOnStartup": {
+        "ledgerLM.autoSyncOnStartup": {
           "type": "boolean",
           "default": true,
           "description": "Scan and sync logs when VS Code starts."
         },
-        "tokenLens.liveTracking": {
+        "ledgerLM.liveTracking": {
           "type": "boolean",
           "default": true,
           "description": "Watch log files and update the dashboard in near-real-time as you work."
         },
-        "tokenLens.claudeCodeHome": {
+        "ledgerLM.claudeCodeHome": {
           "type": "string",
           "default": "",
           "description": "Override path to the Claude Code home directory (defaults to ~/.claude, or $CLAUDE_CONFIG_DIR)."
         },
-        "tokenLens.geminiCliHome": {
+        "ledgerLM.geminiCliHome": {
           "type": "string",
           "default": "",
           "description": "Override path to the Gemini CLI home directory (defaults to ~/.gemini, or $GEMINI_CLI_HOME)."
         },
-        "tokenLens.cacheWriteTtl": {
+        "ledgerLM.cacheWriteTtl": {
           "type": "string",
           "enum": ["5m", "1h"],
           "default": "5m",
           "description": "Cache-write pricing tier for Claude Code USD estimates (5m = 1.25x input, 1h = 2x input)."
         },
-        "tokenLens.showEstimatedCost": {
+        "ledgerLM.showEstimatedCost": {
           "type": "boolean",
           "default": true,
           "description": "Show API-equivalent cost estimates for Claude Code and Gemini CLI. When off, those sources show tokens only (no USD), since you may pay a flat subscription (or nothing on free tiers) rather than per token."
         },
-        "tokenLens.budget.dailyUSD": {
+        "ledgerLM.budget.dailyUSD": {
           "type": "number",
           "default": 0,
           "description": "Daily spend threshold in USD (combined, including Claude Code estimate). 0 disables the alert."
         },
-        "tokenLens.budget.weeklyUSD": {
+        "ledgerLM.budget.weeklyUSD": {
           "type": "number",
           "default": 0,
           "description": "Weekly spend threshold in USD. 0 disables the alert."
         },
-        "tokenLens.debugLogging": {
+        "ledgerLM.debugLogging": {
           "type": "boolean",
           "default": false,
-          "description": "Verbose logging to the TokenLens output channel."
+          "description": "Verbose logging to the LedgerLM output channel."
         }
       }
     }
@@ -152,7 +152,7 @@
     "test:watch": "vitest",
     "make:icon": "node scripts/make-icon.js",
     "build:vsix": "npx @vscode/vsce package --out dist/",
-    "install:vscode": "code --install-extension dist/tokenlens-*.vsix --force",
+    "install:vscode": "code --install-extension dist/ledgerlm-*.vsix --force",
     "dev:vscode": "npm run build:vsix && npm run install:vscode"
   },
   "dependencies": {

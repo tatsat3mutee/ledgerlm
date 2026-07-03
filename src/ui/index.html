@@ -6,11 +6,11 @@
         content="default-src 'none'; style-src {{cspSource}} 'unsafe-inline'; script-src {{cspSource}}; img-src {{cspSource}} data:;" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="{{css}}" />
-  <title>TokenLens</title>
+  <title>LedgerLM</title>
 </head>
 <body>
   <header class="topbar">
-    <h1>TokenLens</h1>
+    <h1>LedgerLM</h1>
     <div class="controls">
       <select id="windowSel" class="sel" title="Time window">
         <option value="0">All time</option>
@@ -41,6 +41,14 @@
 
   <div id="status" class="status hidden"></div>
 
+  <nav class="tabs" id="tabs">
+    <button data-tab="overview" class="active">Overview</button>
+    <button data-tab="sessions">Sessions</button>
+    <button data-tab="models">Models</button>
+    <button data-tab="agents">Agents &amp; Tools</button>
+  </nav>
+
+  <div class="tab-page" id="page-overview">
   <section class="cards" id="cards"></section>
 
   <section class="panel" id="deepDive">
@@ -72,7 +80,9 @@
       <span class="muted">bars = tokens/day, line = cost/day</span>
     </div>
   </section>
+  </div>
 
+  <div class="tab-page hidden" id="page-models">
   <section class="panel">
     <h2>By model</h2>
     <table id="modelsTable"><thead><tr>
@@ -81,7 +91,9 @@
       <th class="num">Cache&nbsp;hit</th><th class="num">Cost</th>
     </tr></thead><tbody></tbody></table>
   </section>
+  </div>
 
+  <div class="tab-page hidden" id="page-sessions">
   <section class="panel">
     <h2>Sessions <span class="muted" style="font-weight:400;text-transform:none;letter-spacing:0">— click a row for per-model detail</span></h2>
     <input id="search" class="search" type="text" placeholder="Filter by title or workspace…" />
@@ -95,6 +107,29 @@
       <th data-sort="when">When</th>
     </tr></thead><tbody></tbody></table>
   </section>
+  </div>
+
+  <div class="tab-page hidden" id="page-agents">
+  <section class="cards" id="agentCards"></section>
+  <section class="panel">
+    <h2>Subagents</h2>
+    <table id="subagentsTable"><thead><tr>
+      <th>Agent</th><th class="num">Invocations</th><th class="num">Sessions</th><th>Last used</th>
+    </tr></thead><tbody></tbody></table>
+  </section>
+  <section class="panel">
+    <h2>Tools</h2>
+    <table id="toolsTable"><thead><tr>
+      <th>Tool</th><th class="num">Calls</th><th class="num">Errors</th><th class="num">Avg time</th><th class="num">Sessions</th><th>Last used</th>
+    </tr></thead><tbody></tbody></table>
+  </section>
+  <section class="panel">
+    <h2>Skills &amp; hooks</h2>
+    <table id="skillsTable"><thead><tr>
+      <th>Kind</th><th>Name</th><th class="num">Calls</th><th class="num">Avg time</th><th>Last used</th>
+    </tr></thead><tbody></tbody></table>
+  </section>
+  </div>
 
   <footer class="foot">
     <span class="foot-item"><span class="key">$X</span> billed (Copilot credits)</span>

@@ -174,7 +174,33 @@ function getExportRows(db, { source, fromTs, toTs } = {}) {
   `, Object.keys(p).length ? p : undefined);
 }
 
+/**
+ * Aggregated agent/tool/skill/hook usage (window-aware via each row's last_ts,
+ * falling back to the parent session's start_time when last_ts is null).
+ */
+function getToolUsage(db, { source, fromTs, toTs } = {}) {
+  const c = [];
+  const p = {};
+  if (source) { c.push('t.source = $source'); p.$source = source; }
+  if (fromTs) { c.push('COALESCE(t.last_ts, s.start_time, 0) >= $from'); p.$from = fromTs; }
+  if (toTs) { c.push('COALESCE(t.last_ts, s.start_time, 0) <= $to'); p.$to = toTs; }
+  const where = c.length ? 'WHERE ' + c.join(' AND ') : '';
+  return db.query(`
+    SELECT t.kind, t.name,
+      SUM(t.calls) AS calls,
+      SUM(t.errors) AS errors,
+      SUM(t.total_dur_ms) AS total_dur_ms,
+      COUNT(DISTINCT t.session_id) AS sessions,
+      MAX(t.last_ts) AS last_ts
+    FROM tool_usage t
+    LEFT JOIN sessions s ON s.session_id = t.session_id
+    ${where}
+    GROUP BY t.kind, t.name
+    ORDER BY calls DESC
+  `, Object.keys(p).length ? p : undefined);
+}
+
 module.exports = {
   getTotals, getSessions, getDailySeries, getModelBreakdown,
-  getSessionModels, getLatestSession, getCacheStats, getExportRows,
+  getSessionModels, getLatestSession, getCacheStats, getExportRows, getToolUsage,
 };

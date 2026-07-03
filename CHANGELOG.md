@@ -2,6 +2,14 @@
 
 All notable changes. Versions are `0.x` while in active development.
 
+## 0.8.0
+
+### Changed - rebrand to LedgerLM
+- **TokenLens is now LedgerLM.** New extension ID (`TatsatP.ledgerlm`), display name, dashboard title, activity-bar label, status bar, command titles, and output channel.
+- Settings moved to the `ledgerLM.*` namespace. Existing `tokenLens.*` (and older `aiCostTracker.*`) values are still read as fallbacks, so no reconfiguration is needed.
+- Legacy `tokenLens.*` commands remain registered as aliases.
+- Export filenames now use the `ledgerlm-` prefix.
+
 ## 0.7.3
 
 ### Changed - metadata and content polish

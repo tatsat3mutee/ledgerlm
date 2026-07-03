@@ -28,7 +28,7 @@ function buildExport(db, opts = {}) {
   if (opts.format === 'csv') {
     const header = COLUMNS.join(',');
     const body = rows.map(r => COLUMNS.map(c => csvEscape(toIso(r, c))).join(',')).join('\n');
-    return { data: header + '\n' + body + '\n', mimeType: 'text/csv', filename: `tokenlens-${stamp}.csv` };
+    return { data: header + '\n' + body + '\n', mimeType: 'text/csv', filename: `ledgerlm-${stamp}.csv` };
   }
 
   const json = rows.map(r => {
@@ -36,7 +36,7 @@ function buildExport(db, opts = {}) {
     for (const c of COLUMNS) o[c] = toIso(r, c);
     return o;
   });
-  return { data: JSON.stringify(json, null, 2), mimeType: 'application/json', filename: `tokenlens-${stamp}.json` };
+  return { data: JSON.stringify(json, null, 2), mimeType: 'application/json', filename: `ledgerlm-${stamp}.json` };
 }
 
 function toIso(row, col) {

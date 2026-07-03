@@ -1,5 +1,5 @@
 /**
- * @fileoverview TokenLens — extension entry point.
+ * @fileoverview LedgerLM — extension entry point.
  * Wires the DB, sync engine, live watcher, budget alerts, status bar, and webview.
  */
 
@@ -18,19 +18,19 @@ const { setGlobalStorageBase } = require('./sources/copilot/paths');
 const { formatUSD, formatTokens } = require('./shared/formatters');
 const logger = require('./utils/logger');
 
-const PANEL_VIEW_TYPE = 'tokenLens.panel';
-const CONFIG_NS = 'tokenLens';
-const LEGACY_CONFIG_NS = 'aiCostTracker';
+const PANEL_VIEW_TYPE = 'ledgerLM.panel';
+const CONFIG_NS = 'ledgerLM';
+const LEGACY_CONFIG_NSES = ['tokenLens', 'aiCostTracker'];
 const COMMANDS = {
-  openPanel: 'tokenLens.openPanel',
-  refresh: 'tokenLens.refresh',
-  export: 'tokenLens.export',
-  legacyOpenPanel: 'aiCostTracker.openPanel',
-  legacyRefresh: 'aiCostTracker.refresh',
-  legacyExport: 'aiCostTracker.export',
+  openPanel: 'ledgerLM.openPanel',
+  refresh: 'ledgerLM.refresh',
+  export: 'ledgerLM.export',
+  legacyOpenPanel: 'tokenLens.openPanel',
+  legacyRefresh: 'tokenLens.refresh',
+  legacyExport: 'tokenLens.export',
 };
 const VIEWS = {
-  panel: 'tokenLensPanel',
+  panel: 'ledgerLMPanel',
 };
 
 let db = null;
@@ -49,10 +49,12 @@ function hasUserConfigValue(config, key) {
 
 function getConfigValue(key, fallback) {
   const modern = vscode.workspace.getConfiguration(CONFIG_NS);
-  const legacy = vscode.workspace.getConfiguration(LEGACY_CONFIG_NS);
   if (hasUserConfigValue(modern, key)) return modern.get(key, fallback);
-  if (hasUserConfigValue(legacy, key)) return legacy.get(key, fallback);
-  return modern.get(key, legacy.get(key, fallback));
+  for (const ns of LEGACY_CONFIG_NSES) {
+    const legacy = vscode.workspace.getConfiguration(ns);
+    if (hasUserConfigValue(legacy, key)) return legacy.get(key, fallback);
+  }
+  return modern.get(key, fallback);
 }
 
 function readConfig() {
@@ -71,7 +73,7 @@ function readConfig() {
 }
 
 async function activate(context) {
-  outputChannel = vscode.window.createOutputChannel('TokenLens');
+  outputChannel = vscode.window.createOutputChannel('LedgerLM');
   const config = readConfig();
   logger.initLogger(outputChannel, config.debugLogging);
   logger.log('activating', config);
@@ -82,8 +84,8 @@ async function activate(context) {
   // Status bar
   statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
   statusBar.command = COMMANDS.openPanel;
-  statusBar.text = '$(telescope) TokenLens';
-  statusBar.tooltip = 'Open TokenLens';
+  statusBar.text = '$(telescope) LedgerLM';
+  statusBar.tooltip = 'Open LedgerLM';
   statusBar.show();
   context.subscriptions.push(statusBar);
 
@@ -95,7 +97,7 @@ async function activate(context) {
     if (cfg.liveTracking) startWatcher();
   }).catch(err => {
     logger.warn('init failed', err.message);
-    vscode.window.showErrorMessage('TokenLens init failed: ' + err.message);
+    vscode.window.showErrorMessage('LedgerLM init failed: ' + err.message);
   });
 
   // Commands
@@ -134,7 +136,7 @@ async function activate(context) {
   // React to config changes (live tracking toggle, debug, etc.).
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration(e => {
-      if (!e.affectsConfiguration(CONFIG_NS) && !e.affectsConfiguration(LEGACY_CONFIG_NS)) return;
+      if (!e.affectsConfiguration(CONFIG_NS) && !LEGACY_CONFIG_NSES.some(ns => e.affectsConfiguration(ns))) return;
       const cfg = readConfig();
       logger.setDebug(cfg.debugLogging);
       if (cfg.liveTracking) startWatcher(); else stopWatcher();
@@ -154,14 +156,14 @@ async function runSync({ manual = false } = {}) {
     // Budget alerts
     for (const a of checkBudgets(db, cfg)) {
       vscode.window.showWarningMessage(
-        `TokenLens: ${a.period === 'day' ? 'daily' : 'weekly'} budget of ${formatUSD(a.limit)} reached (${formatUSD(a.spent)} so far).`
+        `LedgerLM: ${a.period === 'day' ? 'daily' : 'weekly'} budget of ${formatUSD(a.limit)} reached (${formatUSD(a.spent)} so far).`
       );
     }
     updateStatusBar();
     if (rpc) rpc.notify('syncComplete', result);
     if (manual) {
       vscode.window.showInformationMessage(
-        result.synced > 0 ? `TokenLens — synced ${result.synced} session${result.synced === 1 ? '' : 's'}` : 'TokenLens — up to date'
+        result.synced > 0 ? `LedgerLM — synced ${result.synced} session${result.synced === 1 ? '' : 's'}` : 'LedgerLM — up to date'
       );
     }
   } catch (err) {
@@ -179,7 +181,7 @@ function updateStatusBar() {
     statusBar.text = `$(telescope) ${formatTokens(b.day.tokens)} tok · ${formatUSD(b.day.usd)} today`;
     const overDay = b.day.limit > 0 && b.day.usd >= b.day.limit;
     statusBar.backgroundColor = overDay ? new vscode.ThemeColor('statusBarItem.warningBackground') : undefined;
-    statusBar.tooltip = `TokenLens — today ${formatUSD(b.day.usd)}, this week ${formatUSD(b.week.usd)} (Claude Code shown as API-equivalent estimate). Click to open.`;
+    statusBar.tooltip = `LedgerLM — today ${formatUSD(b.day.usd)}, this week ${formatUSD(b.week.usd)} (Claude Code shown as API-equivalent estimate). Click to open.`;
   } catch { /* ignore */ }
 }
 
@@ -202,13 +204,13 @@ async function exportReportFlow(format) {
   });
   if (!uri) return;
   fs.writeFileSync(uri.fsPath, out.data, 'utf-8');
-  vscode.window.showInformationMessage('TokenLens — exported to ' + uri.fsPath);
+  vscode.window.showInformationMessage('LedgerLM — exported to ' + uri.fsPath);
 }
 
 function showPanel(context) {
   if (panel) { panel.reveal(vscode.ViewColumn.One); return; }
   panel = vscode.window.createWebviewPanel(
-    PANEL_VIEW_TYPE, 'TokenLens', vscode.ViewColumn.One,
+    PANEL_VIEW_TYPE, 'LedgerLM', vscode.ViewColumn.One,
     { enableScripts: true, retainContextWhenHidden: true,
       localResourceRoots: [vscode.Uri.file(path.join(context.extensionPath, 'src', 'ui'))] }
   );
@@ -227,27 +229,26 @@ function showPanel(context) {
   }));
   rpc.handle('getSessions', ({ source, fromTs, toTs } = {}) => queries.getSessions(db, { source, fromTs, toTs }));
   rpc.handle('getSessionModels', ({ sessionId } = {}) => queries.getSessionModels(db, sessionId));
+  rpc.handle('getToolUsage', ({ source, fromTs, toTs } = {}) => queries.getToolUsage(db, { source, fromTs, toTs }));
   rpc.handle('openLog', async ({ path: p } = {}) => {
     if (!p || !fs.existsSync(p)) {
-      if (p) vscode.window.showWarningMessage('TokenLens — log not found: ' + p);
+      if (p) vscode.window.showWarningMessage('LedgerLM — log not found: ' + p);
       return { opened: false };
     }
+    // Always try the editor first. VS Code opens large files fine (it only
+    // disables tokenization/extension sync above ~50 MB); only fall back to
+    // revealing on disk if the editor genuinely refuses the file.
     try {
-      const sizeMB = fs.statSync(p).size / (1024 * 1024);
-      if (sizeMB > 40) {
-        // Editor can't load very large files via the extension host — reveal on disk instead.
-        await vscode.commands.executeCommand('revealFileInOS', vscode.Uri.file(p));
-        vscode.window.showInformationMessage(`TokenLens — log is ${Math.round(sizeMB)} MB (too large for the editor); revealed in your file explorer.`);
-        return { opened: true };
-      }
       await vscode.commands.executeCommand('vscode.open', vscode.Uri.file(p), { preview: true });
       return { opened: true };
     } catch (err) {
       try {
         await vscode.commands.executeCommand('revealFileInOS', vscode.Uri.file(p));
+        const sizeMB = Math.round(fs.statSync(p).size / (1024 * 1024));
+        vscode.window.showInformationMessage(`LedgerLM — the editor could not open this ${sizeMB} MB log; revealed it in your file explorer instead.`);
         return { opened: true };
       } catch {
-        vscode.window.showWarningMessage('TokenLens — could not open log: ' + (err && err.message));
+        vscode.window.showWarningMessage('LedgerLM — could not open log: ' + (err && err.message));
         return { opened: false };
       }
     }
@@ -268,7 +269,7 @@ async function exportReportFlowFromWebview(format, source, fromTs, toTs) {
   });
   if (!uri) return;
   fs.writeFileSync(uri.fsPath, out.data, 'utf-8');
-  vscode.window.showInformationMessage('TokenLens — exported to ' + uri.fsPath);
+  vscode.window.showInformationMessage('LedgerLM — exported to ' + uri.fsPath);
 }
 
 function panelHtml(webview, context) {
@@ -287,7 +288,7 @@ function sidebarHtml() {
     body{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0;padding:16px;text-align:center;font-family:var(--vscode-font-family);color:var(--vscode-foreground)}
     button{margin-top:10px;padding:6px 12px;cursor:pointer}
   </style></head><body>
-    <h3>TokenLens</h3>
+    <h3>LedgerLM</h3>
     <p>Claude Code, Copilot, and Gemini CLI token usage.</p>
     <button onclick="acquireVsCodeApi().postMessage('open')">Open Dashboard</button>
   </body></html>`;

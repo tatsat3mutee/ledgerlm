@@ -1,4 +1,4 @@
-/* TokenLens — webview app (self-contained; no module imports). */
+/* LedgerLM — webview app (self-contained; no module imports). */
 /* global acquireVsCodeApi */
 (function () {
   'use strict';
@@ -95,6 +95,7 @@
   const saved = vscode.getState() || {};
   let currentSource = saved.source || '';
   let sessions = [];
+  let toolUsage = [];
   let sortKey = saved.sortKey || 'when', sortDir = saved.sortDir || -1;
   let showEstimates = true;
   let cacheStats = { breaks: 0 };
@@ -161,6 +162,16 @@
   $('exportJsonBtn').addEventListener('click', () => call('export', Object.assign({ format: 'json' }, params())));
   $('search').addEventListener('input', () => { saveState(); renderSessions(); });
 
+  // --- tab navigation ---
+  $('tabs').addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-tab]');
+    if (!btn) return;
+    [...$('tabs').children].forEach((b) => b.classList.toggle('active', b === btn));
+    document.querySelectorAll('.tab-page').forEach((p) => {
+      p.classList.toggle('hidden', p.id !== 'page-' + btn.dataset.tab);
+    });
+  });
+
   document.querySelector('#sessionsTable thead').addEventListener('click', (e) => {
     const th = e.target.closest('th[data-sort]');
     if (!th) return;
@@ -176,15 +187,16 @@
   function setStatus(msg) { const el = $('status'); el.textContent = msg; el.classList.toggle('hidden', !msg); }
 
   function safe(label, fn) {
-    try { fn(); } catch (err) { console.error('[tokenlens] render ' + label + ' failed:', err); }
+    try { fn(); } catch (err) { console.error('[ledgerlm] render ' + label + ' failed:', err); }
   }
 
   async function refresh() {
     try {
       sessionModelCache.clear();
       const p = params();
-      const [dash, sess] = await Promise.all([call('getDashboard', p), call('getSessions', p)]);
+      const [dash, sess, tools] = await Promise.all([call('getDashboard', p), call('getSessions', p), call('getToolUsage', p)]);
       sessions = sess || [];
+      toolUsage = tools || [];
       showEstimates = !dash.settings || dash.settings.showEstimatedCost !== false;
       cacheStats = dash.cache || { breaks: 0 };
       openFolders = dash.workspaceFolders || [];
@@ -195,13 +207,42 @@
       safe('models', () => renderModels(dash.models || []));
       safe('chart', () => renderChart(dash.daily || []));
       safe('sessions', () => renderSessions());
+      safe('agents', () => renderAgents());
     } catch (err) {
       setStatus('Could not load data: ' + err.message);
-      console.error('[tokenlens] refresh failed:', err);
+      console.error('[ledgerlm] refresh failed:', err);
     }
   }
 
   function totalsForView(totals) { return totals.filter((t) => !currentSource || t.source === currentSource); }
+
+  function renderAgents() {
+    const rows = toolUsage || [];
+    const by = (kind) => rows.filter((r) => r.kind === kind);
+    const tools = by('tool'), hooks = by('hook'), agents = by('subagent'), skills = by('skill');
+    const sumCalls = (list) => list.reduce((a, r) => a + (r.calls || 0), 0);
+    const fmtWhen = (ts) => ts ? new Date(ts * 1000).toLocaleDateString() : '—';
+    const fmtAvg = (r) => r.total_dur_ms > 0 && r.calls > 0 ? Math.round(r.total_dur_ms / r.calls).toLocaleString() + ' ms' : '—';
+
+    $('agentCards').innerHTML = [
+      { label: 'Tool calls', big: sumCalls(tools).toLocaleString(), sub: tools.length + ' distinct tools' },
+      { label: 'Subagent runs', big: sumCalls(agents).toLocaleString(), sub: agents.length + ' distinct agents' },
+      { label: 'Skill invocations', big: sumCalls(skills).toLocaleString(), sub: skills.length + ' distinct skills' },
+      { label: 'Hook executions', big: sumCalls(hooks).toLocaleString(), sub: hooks.length + ' distinct hooks' },
+    ].map((c) => `<div class="card"><div class="label">${c.label}</div><div class="big">${c.big}</div><div class="sub">${c.sub}</div></div>`).join('');
+
+    const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+    document.querySelector('#subagentsTable tbody').innerHTML = agents.length
+      ? agents.map((r) => `<tr><td>${esc(r.name)}</td><td class="num">${r.calls}</td><td class="num">${r.sessions}</td><td>${fmtWhen(r.last_ts)}</td></tr>`).join('')
+      : '<tr><td colspan="4" class="muted">No subagent activity in this window.</td></tr>';
+    document.querySelector('#toolsTable tbody').innerHTML = tools.length
+      ? tools.slice(0, 40).map((r) => `<tr><td>${esc(r.name)}</td><td class="num">${r.calls}</td><td class="num">${r.errors || 0}</td><td class="num">${fmtAvg(r)}</td><td class="num">${r.sessions}</td><td>${fmtWhen(r.last_ts)}</td></tr>`).join('')
+      : '<tr><td colspan="6" class="muted">No tool calls in this window.</td></tr>';
+    const sk = skills.concat(hooks);
+    document.querySelector('#skillsTable tbody').innerHTML = sk.length
+      ? sk.map((r) => `<tr><td><span class="src-tag ${r.kind === 'skill' ? 'gm' : 'cp'}">${r.kind}</span></td><td>${esc(r.name)}</td><td class="num">${r.calls}</td><td class="num">${fmtAvg(r)}</td><td>${fmtWhen(r.last_ts)}</td></tr>`).join('')
+      : '<tr><td colspan="5" class="muted">No skill or hook activity in this window.</td></tr>';
+  }
 
   function renderCards(totals) {
     const view = totalsForView(totals);
@@ -238,10 +279,10 @@
     const fresh = sum('input_tokens'), cached = sum('cache_read_tokens'), cw = sum('cache_write_tokens'), out = sum('output_tokens');
     const total = fresh + cached + cw + out;
     const segs = [
-      ['Fresh input', fresh, '#5aa0e0'],
-      ['Cached read', cached, '#7ad17a'],
-      ['Cache write', cw, '#e0a86a'],
-      ['Output', out, '#c07ad1'],
+      ['Fresh input', fresh, '#58a6ff'],
+      ['Cached read', cached, '#3fb950'],
+      ['Cache write', cw, '#d29922'],
+      ['Output', out, '#a78bfa'],
     ];
     $('tokBar').innerHTML = total > 0
       ? segs.map(([, v, c]) => v > 0 ? `<span style="width:${(v / total * 100).toFixed(2)}%;background:${c}" title="${fmtTok(v)}"></span>` : '').join('')
@@ -469,7 +510,7 @@
     ctx.clearRect(0, 0, cssW, cssH);
 
     const SRCS = ['claudeCode', 'copilot', 'geminiCli'];
-    const COLORS = { claudeCode: '#d8915f', copilot: '#5aa0e0', geminiCli: '#4cc2b4' };
+    const COLORS = { claudeCode: '#e07b4f', copilot: '#58a6ff', geminiCli: '#34c7b5' };
     const byDay = new Map();
     for (const r of daily) {
       if (!byDay.has(r.day)) byDay.set(r.day, { claudeCode: { t: 0, c: 0 }, copilot: { t: 0, c: 0 }, geminiCli: { t: 0, c: 0 } });

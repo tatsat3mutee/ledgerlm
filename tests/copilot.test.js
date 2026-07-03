@@ -31,6 +31,16 @@ describe('copilot.parse', () => {
     expect(parsed.title).toMatch(/docker build/);
     expect(parsed.models).toEqual(['claude-sonnet-4.6']);
   });
+
+  it('aggregates tool, hook, and subagent usage', () => {
+    const byKey = Object.fromEntries(parsed.toolUsage.map((u) => [u.kind + ':' + u.name, u]));
+    expect(byKey['tool:read_file'].calls).toBe(2);
+    expect(byKey['tool:read_file'].errors).toBe(1);
+    expect(byKey['tool:read_file'].totalDurMs).toBe(42);
+    expect(byKey['hook:SessionStart'].calls).toBe(1);
+    expect(byKey['subagent:Explore'].calls).toBe(1);
+    expect(byKey['subagent:title']).toBeUndefined(); // internal title generation is excluded
+  });
 });
 
 describe('copilot.loadPricing', () => {

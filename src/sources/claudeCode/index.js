@@ -19,7 +19,7 @@ const SOURCE = 'claudeCode';
 /**
  * Discover Claude Code sessions. One descriptor per <uuid>.jsonl, with any
  * sub-agent files attached so they sync together.
- * @param {string} [override] tokenLens.claudeCodeHome
+ * @param {string} [override] ledgerLM.claudeCodeHome
  */
 function discover(override) {
   const projectsDir = getClaudeProjectsDir(override);
@@ -71,18 +71,20 @@ function discover(override) {
  * @returns {{title:string|null, workspace:string|null, calls:Array, models:string[], firstTs:number|null, lastTs:number|null}}
  */
 function parse(mainPath, subFiles = []) {
-  const result = { title: null, workspace: null, calls: [], models: [], firstTs: null, lastTs: null };
+  const result = { title: null, workspace: null, calls: [], models: [], firstTs: null, lastTs: null, toolUsage: [] };
   const models = new Set();
   const seen = new Set(); // dedupe assistant messages by message.id
+  const usage = new Map(); // 'kind:name' -> aggregate
 
-  parseFile(mainPath, false, result, models, seen);
-  for (const sf of subFiles) parseFile(sf, true, result, models, seen);
+  parseFile(mainPath, false, result, models, seen, usage);
+  for (const sf of subFiles) parseFile(sf, true, result, models, seen, usage);
 
   result.models = [...models];
+  result.toolUsage = [...usage.values()];
   return result;
 }
 
-function parseFile(filePath, isSubagentFile, result, models, seen) {
+function parseFile(filePath, isSubagentFile, result, models, seen, usage) {
   let content;
   try { content = fs.readFileSync(filePath, 'utf-8'); } catch { return; }
 
@@ -114,6 +116,8 @@ function parseFile(filePath, isSubagentFile, result, models, seen) {
     models.add(model);
     const tsSec = ev.timestamp ? Math.floor(Date.parse(ev.timestamp) / 1000) : null;
 
+    recordToolUse(msg.content, tsSec, usage);
+
     result.calls.push({
       ts: tsSec,
       model,
@@ -128,6 +132,31 @@ function parseFile(filePath, isSubagentFile, result, models, seen) {
       if (result.firstTs == null || tsSec < result.firstTs) result.firstTs = tsSec;
       if (result.lastTs == null || tsSec > result.lastTs) result.lastTs = tsSec;
     }
+  }
+}
+
+/**
+ * Aggregate tool_use blocks from an assistant message.
+ * Task -> subagent (named by input.subagent_type), Skill -> skill, everything else -> tool.
+ */
+function recordToolUse(content, tsSec, usage) {
+  if (!Array.isArray(content)) return;
+  for (const block of content) {
+    if (!block || block.type !== 'tool_use' || !block.name) continue;
+    let kind = 'tool';
+    let name = block.name;
+    if (name === 'Task') {
+      kind = 'subagent';
+      name = (block.input && (block.input.subagent_type || block.input.description)) || 'Task';
+    } else if (name === 'Skill') {
+      kind = 'skill';
+      name = (block.input && (block.input.command || block.input.skill)) || 'Skill';
+    }
+    const key = kind + ':' + name;
+    let u = usage.get(key);
+    if (!u) { u = { kind, name, calls: 0, errors: 0, totalDurMs: 0, lastTs: null }; usage.set(key, u); }
+    u.calls += 1;
+    if (tsSec != null && (u.lastTs == null || tsSec > u.lastTs)) u.lastTs = tsSec;
   }
 }
 

@@ -1,20 +1,20 @@
-# TokenLens - AI Usage & Cost
+# LedgerLM - AI Usage & Cost
 
 > AI usage and cost tracking for Claude Code, GitHub Copilot, and Gemini CLI - fully local.
 
-A VS Code extension that tracks **token usage for Claude Code, GitHub Copilot, and Gemini CLI** in one place. TokenLens is token-first, with cost shown only when the data is reliable. It includes a unified dashboard, time-window filtering, token/cache deep dives, cache-break impact, budgets, live updates, and CSV/JSON export.
+A VS Code extension that tracks **token usage for Claude Code, GitHub Copilot, and Gemini CLI** in one place. LedgerLM is token-first, with cost shown only when the data is reliable. It includes a unified dashboard, time-window filtering, token/cache deep dives, cache-break impact, budgets, live updates, and CSV/JSON export.
 
-![TokenLens dashboard - unified token, cache, and cost analytics for Claude Code, GitHub Copilot, and Gemini CLI](https://raw.githubusercontent.com/tatsat3mutee/tokenlens/main/media/dashboard-dark.png)
+![LedgerLM dashboard - unified token, cache, and cost analytics for Claude Code, GitHub Copilot, and Gemini CLI](https://raw.githubusercontent.com/tatsat3mutee/ledgerlm/main/media/dashboard-dark.png)
 
-<sub>The TokenLens panel: per-source cards, token & cache deep dive, latest session, budgets, daily usage chart, and a by-model breakdown. It also follows your VS Code light theme:</sub>
+<sub>The LedgerLM panel: per-source cards, token & cache deep dive, latest session, budgets, daily usage chart, and a by-model breakdown. It also follows your VS Code light theme:</sub>
 
-![TokenLens dashboard in a light VS Code theme](https://raw.githubusercontent.com/tatsat3mutee/tokenlens/main/media/dashboard-light.png)
+![LedgerLM dashboard in a light VS Code theme](https://raw.githubusercontent.com/tatsat3mutee/ledgerlm/main/media/dashboard-light.png)
 
 ## 100% local - no cloud, no telemetry
 
-**Your data never leaves your machine.** TokenLens reads the log files your AI tools already write to disk, computes everything **locally**, and stores results in a local SQLite file inside VS Code's own storage. There are **no servers, no accounts, no outbound network calls, and no telemetry**. Source logs are opened **read-only** and are never modified.
+**Your data never leaves your machine.** LedgerLM reads the log files your AI tools already write to disk, computes everything **locally**, and stores results in a local SQLite file inside VS Code's own storage. There are **no servers, no accounts, no outbound network calls, and no telemetry**. Source logs are opened **read-only** and are never modified.
 
-> Token-first by design. AI tools do not bill the same way - Copilot meters *premium-request credits*, Claude Code is commonly a *flat subscription*, and Gemini CLI may be *free-tier*. TokenLens prioritizes **tokens and cache behavior** (always exact) and shows USD only when confidence is clear. See [Cost methodology](docs/COST-METHODOLOGY.md).
+> Token-first by design. AI tools do not bill the same way - Copilot meters *premium-request credits*, Claude Code is commonly a *flat subscription*, and Gemini CLI may be *free-tier*. LedgerLM prioritizes **tokens and cache behavior** (always exact) and shows USD only when confidence is clear. See [Cost methodology](docs/COST-METHODOLOGY.md).
 
 ---
 
@@ -37,7 +37,7 @@ A VS Code extension that tracks **token usage for Claude Code, GitHub Copilot, a
 
 ### Cost - only when trustworthy
 - **Copilot** -> premium-request **AI credits** (`copilotUsageNanoAiu`, $0.01/credit). `≥` marks a floor when some calls predate the credit field.
-- **Claude Code / Gemini CLI** -> **≈ API-equivalent estimate** from bundled price tables (you likely pay a flat subscription - or nothing on Gemini's free tier - so it is labeled `est`; hide it with `tokenLens.showEstimatedCost`).
+- **Claude Code / Gemini CLI** -> **≈ API-equivalent estimate** from bundled price tables (you likely pay a flat subscription - or nothing on Gemini's free tier - so it is labeled `est`; hide it with `ledgerLM.showEstimatedCost`).
 - **`—`** → no reliable cost; tokens are shown instead. Unpriced models are excluded from totals.
 
 ### Budgets, live, export
@@ -59,13 +59,13 @@ Computed data lives in a local `sql.js` SQLite file under the extension's VS Cod
 
 ## Privacy
 
-TokenLens is **local-first and offline by design**:
+LedgerLM is **local-first and offline by design**:
 
 - **No network.** Nothing is uploaded, no analytics, no telemetry, no accounts or sign-in. The extension makes zero outbound requests.
-- **Read-only.** Your AI tool logs are opened read-only; TokenLens never edits or deletes them.
+- **Read-only.** Your AI tool logs are opened read-only; LedgerLM never edits or deletes them.
 - **Local storage only.** All computed data stays in a SQLite file inside VS Code's `globalStorage` on your disk. Uninstalling clears it.
 - **No bundled secrets.** Pricing tables ship with the extension; no API keys are used or required.
-- **Open source.** Audit every line - see the [repository](https://github.com/tatsat3mutee/tokenlens).
+- **Open source.** Audit every line - see the [repository](https://github.com/tatsat3mutee/ledgerlm).
 
 ## Install / develop
 
@@ -77,21 +77,21 @@ npm run dev:vscode       # package .vsix and install into VS Code
 # or press F5 in VS Code for an Extension Development Host
 ```
 
-Open the dashboard from the activity-bar icon, the status bar item, or `TokenLens: Open Dashboard`.
+Open the dashboard from the activity-bar icon, the status bar item, or `LedgerLM: Open Dashboard`.
 
 ## Settings
 
 | Setting | Default | Description |
 |---|---|---|
-| `tokenLens.sources` | `["claudeCode","copilot","geminiCli"]` | Which tools to track. |
-| `tokenLens.autoSyncOnStartup` | `true` | Sync on VS Code start. |
-| `tokenLens.liveTracking` | `true` | Watch logs and refresh as you work. |
-| `tokenLens.claudeCodeHome` | `""` | Override `~/.claude` (or set `$CLAUDE_CONFIG_DIR`). |
-| `tokenLens.geminiCliHome` | `""` | Override `~/.gemini` (or set `$GEMINI_CLI_HOME`). |
-| `tokenLens.cacheWriteTtl` | `5m` | Cache-write pricing tier for Claude Code estimates (5m = 1.25×, 1h = 2×). |
-| `tokenLens.showEstimatedCost` | `true` | Show Claude Code / Gemini CLI estimates. Off → tokens only, no USD. |
-| `tokenLens.budget.dailyUSD` / `weeklyUSD` | `0` | Spend thresholds (0 = off). |
-| `tokenLens.debugLogging` | `false` | Verbose output channel. |
+| `ledgerLM.sources` | `["claudeCode","copilot","geminiCli"]` | Which tools to track. |
+| `ledgerLM.autoSyncOnStartup` | `true` | Sync on VS Code start. |
+| `ledgerLM.liveTracking` | `true` | Watch logs and refresh as you work. |
+| `ledgerLM.claudeCodeHome` | `""` | Override `~/.claude` (or set `$CLAUDE_CONFIG_DIR`). |
+| `ledgerLM.geminiCliHome` | `""` | Override `~/.gemini` (or set `$GEMINI_CLI_HOME`). |
+| `ledgerLM.cacheWriteTtl` | `5m` | Cache-write pricing tier for Claude Code estimates (5m = 1.25×, 1h = 2×). |
+| `ledgerLM.showEstimatedCost` | `true` | Show Claude Code / Gemini CLI estimates. Off → tokens only, no USD. |
+| `ledgerLM.budget.dailyUSD` / `weeklyUSD` | `0` | Spend thresholds (0 = off). |
+| `ledgerLM.debugLogging` | `false` | Verbose output channel. |
 
 ## Docs
 

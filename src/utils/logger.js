@@ -1,5 +1,5 @@
 /**
- * @fileoverview Tiny output-channel logger. Gated by tokenLens.debugLogging.
+ * @fileoverview Tiny output-channel logger. Gated by ledgerLM.debugLogging.
  */
 
 let channel = null;

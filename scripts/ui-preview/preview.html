@@ -6,7 +6,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="../../src/ui/styles.css" />
-  <title>TokenLens — UI preview</title>
+  <title>LedgerLM — UI preview</title>
   <style id="themeVars"></style>
   <script>
     // --- theme simulation (toggle with ?theme=light) ---
@@ -107,6 +107,20 @@
 
     const SESSION_MODELS = { 'cp:37cb5475-cb53-4b85-b70d-45cbec1520a4': DASH.latest.models.map((m) => Object.assign({ cache_write: 0 }, m)) };
 
+    const TOOL_USAGE = [
+      { kind: 'tool', name: 'read_file', calls: 412, errors: 2, total_dur_ms: 8600, sessions: 18, last_ts: NOW - 420 },
+      { kind: 'tool', name: 'replace_string_in_file', calls: 178, errors: 6, total_dur_ms: 22000, sessions: 14, last_ts: NOW - 900 },
+      { kind: 'tool', name: 'run_in_terminal', calls: 131, errors: 4, total_dur_ms: 512000, sessions: 16, last_ts: NOW - 420 },
+      { kind: 'tool', name: 'grep_search', calls: 96, errors: 0, total_dur_ms: 4100, sessions: 12, last_ts: NOW - 3600 },
+      { kind: 'tool', name: 'manage_todo_list', calls: 54, errors: 0, total_dur_ms: 700, sessions: 9, last_ts: NOW - 420 },
+      { kind: 'subagent', name: 'Explore', calls: 12, errors: 0, total_dur_ms: 0, sessions: 6, last_ts: NOW - 7200 },
+      { kind: 'subagent', name: 'code-reviewer', calls: 4, errors: 0, total_dur_ms: 0, sessions: 3, last_ts: NOW - 86400 },
+      { kind: 'skill', name: 'commit', calls: 9, errors: 0, total_dur_ms: 0, sessions: 5, last_ts: NOW - 3600 },
+      { kind: 'skill', name: 'create-pull-request', calls: 3, errors: 0, total_dur_ms: 0, sessions: 2, last_ts: NOW - 2 * 86400 },
+      { kind: 'hook', name: 'SessionStart', calls: 21, errors: 1, total_dur_ms: 64000, sessions: 11, last_ts: NOW - 420 },
+      { kind: 'hook', name: 'PreToolUse', calls: 240, errors: 0, total_dur_ms: 31000, sessions: 8, last_ts: NOW - 900 },
+    ];
+
     window.acquireVsCodeApi = function () {
       let state = {};
       return {
@@ -118,6 +132,7 @@
           switch (msg.method) {
             case 'getDashboard': return respond(DASH);
             case 'getSessions': return respond(SESSIONS);
+            case 'getToolUsage': return respond(TOOL_USAGE);
             case 'getSessionModels': return respond(SESSION_MODELS[msg.params.sessionId] || MODELS.slice(0, 2).map((m) => Object.assign({}, m)));
             default: return respond(null);
           }
@@ -128,7 +143,7 @@
 </head>
 <body>
   <header class="topbar">
-    <h1>TokenLens</h1>
+    <h1>LedgerLM</h1>
     <div class="controls">
       <select id="windowSel" class="sel" title="Time window">
         <option value="0">All time</option>
@@ -159,6 +174,14 @@
 
   <div id="status" class="status hidden"></div>
 
+  <nav class="tabs" id="tabs">
+    <button data-tab="overview" class="active">Overview</button>
+    <button data-tab="sessions">Sessions</button>
+    <button data-tab="models">Models</button>
+    <button data-tab="agents">Agents &amp; Tools</button>
+  </nav>
+
+  <div class="tab-page" id="page-overview">
   <section class="cards" id="cards"></section>
 
   <section class="panel" id="deepDive">
@@ -190,7 +213,9 @@
       <span class="muted">bars = tokens/day, line = cost/day</span>
     </div>
   </section>
+  </div>
 
+  <div class="tab-page hidden" id="page-models">
   <section class="panel">
     <h2>By model</h2>
     <table id="modelsTable"><thead><tr>
@@ -199,7 +224,9 @@
       <th class="num">Cache&nbsp;hit</th><th class="num">Cost</th>
     </tr></thead><tbody></tbody></table>
   </section>
+  </div>
 
+  <div class="tab-page hidden" id="page-sessions">
   <section class="panel">
     <h2>Sessions <span class="muted" style="font-weight:400;text-transform:none;letter-spacing:0">— click a row for per-model detail</span></h2>
     <input id="search" class="search" type="text" placeholder="Filter by title or workspace…" />
@@ -213,6 +240,29 @@
       <th data-sort="when">When</th>
     </tr></thead><tbody></tbody></table>
   </section>
+  </div>
+
+  <div class="tab-page hidden" id="page-agents">
+  <section class="cards" id="agentCards"></section>
+  <section class="panel">
+    <h2>Subagents</h2>
+    <table id="subagentsTable"><thead><tr>
+      <th>Agent</th><th class="num">Invocations</th><th class="num">Sessions</th><th>Last used</th>
+    </tr></thead><tbody></tbody></table>
+  </section>
+  <section class="panel">
+    <h2>Tools</h2>
+    <table id="toolsTable"><thead><tr>
+      <th>Tool</th><th class="num">Calls</th><th class="num">Errors</th><th class="num">Avg time</th><th class="num">Sessions</th><th>Last used</th>
+    </tr></thead><tbody></tbody></table>
+  </section>
+  <section class="panel">
+    <h2>Skills &amp; hooks</h2>
+    <table id="skillsTable"><thead><tr>
+      <th>Kind</th><th>Name</th><th class="num">Calls</th><th class="num">Avg time</th><th>Last used</th>
+    </tr></thead><tbody></tbody></table>
+  </section>
+  </div>
 
   <footer class="foot">
     <span class="foot-item"><span class="key">$X</span> billed (Copilot credits)</span>
