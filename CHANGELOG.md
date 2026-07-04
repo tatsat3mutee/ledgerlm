@@ -2,6 +2,11 @@
 
 All notable changes. Versions are `0.x` while in active development.
 
+## 0.8.1
+
+### Fixed - documentation
+- Replaced broken README screenshots (previous captures were rendered at a narrow width) with proper full-width dashboard, light-theme, and Agents & Tools images.
+
 ## 0.8.0
 
 ### Changed - rebrand to LedgerLM

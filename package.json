@@ -2,7 +2,7 @@
   "name": "ledgerlm",
   "displayName": "LedgerLM - AI Usage & Cost",
   "description": "Local token usage and cache analytics for Claude Code, GitHub Copilot, and Gemini CLI. No cloud sync, no telemetry, and no outbound requests.",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "publisher": "TatsatP",
   "license": "MIT",
   "icon": "media/icon.png",
