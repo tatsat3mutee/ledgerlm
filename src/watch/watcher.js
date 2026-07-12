@@ -9,7 +9,8 @@
 const fs = require('fs');
 const { getWorkspaceStoragePaths } = require('../sources/copilot/paths');
 const { getClaudeProjectsDir } = require('../sources/claudeCode/paths');
-const { getGeminiTmpDir } = require('../sources/geminiCli/paths');
+const { getCodexSessionsDir } = require('../sources/codex/paths');
+const { getOpencodeDataDir } = require('../sources/opencode/paths');
 const log = require('../utils/logger');
 
 class Watcher {
@@ -23,7 +24,7 @@ class Watcher {
 
   start(config) {
     this.stop();
-    const sources = config.sources || ['claudeCode', 'copilot', 'geminiCli'];
+    const sources = config.sources || ['claudeCode', 'copilot', 'codex', 'opencode'];
     /** @type {Array<{root:string, match:RegExp}>} */
     const roots = [];
     const jsonl = /\.jsonl$/;
@@ -34,10 +35,14 @@ class Watcher {
       const cc = getClaudeProjectsDir(config.claudeCodeHome);
       if (cc) roots.push({ root: cc, match: jsonl });
     }
-    if (sources.includes('geminiCli')) {
-      const gm = getGeminiTmpDir(config.geminiCliHome);
-      // Only session files under chats/ — the tmp dir also holds otel logs etc.
-      if (gm) roots.push({ root: gm, match: /(^|[\\/])chats[\\/].*\.jsonl?$/ });
+    if (sources.includes('codex')) {
+      const cx = getCodexSessionsDir(config.codexHome);
+      if (cx) roots.push({ root: cx, match: /rollout-.*\.jsonl$/ });
+    }
+    if (sources.includes('opencode')) {
+      const oc = getOpencodeDataDir(config.opencodeHome);
+      // Only session storage files — the data dir also holds logs, auth, caches.
+      if (oc) roots.push({ root: oc, match: /(^|[\\/])session[\\/].*\.json$/ });
     }
 
     for (const { root, match } of roots) {

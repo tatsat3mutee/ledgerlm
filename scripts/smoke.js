@@ -16,7 +16,7 @@ const { formatUSD, formatTokens } = require('../src/shared/formatters');
   const db = new Database(dir);
   await db.init();
 
-  const config = { sources: ['claudeCode', 'copilot', 'geminiCli'], cacheWriteTtl: '5m', 'budget.dailyUSD': 0, 'budget.weeklyUSD': 0 };
+  const config = { sources: ['claudeCode', 'copilot', 'codex', 'opencode'], cacheWriteTtl: '5m', 'budget.dailyUSD': 0, 'budget.weeklyUSD': 0 };
   console.time('fullSync');
   const result = await fullSync(db, config);
   console.timeEnd('fullSync');

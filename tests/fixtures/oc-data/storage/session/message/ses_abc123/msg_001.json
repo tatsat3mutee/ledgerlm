@@ -1,0 +1,6 @@
+{
+  "id": "msg_001",
+  "role": "user",
+  "sessionID": "ses_abc123",
+  "time": { "created": 1767960000000 }
+}

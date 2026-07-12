@@ -14,11 +14,12 @@
     <div class="controls">
       <select id="windowSel" class="sel" title="Time window">
         <option value="0">All time</option>
+        <option value="1">Last 1h</option>
+        <option value="3">Last 3h</option>
         <option value="6">Last 6h</option>
         <option value="12">Last 12h</option>
         <option value="24">Last 24h</option>
         <option value="48">Last 48h</option>
-        <option value="72">Last 72h</option>
         <option value="168">Last 7 days</option>
         <option value="custom">Custom…</option>
       </select>
@@ -27,12 +28,13 @@
         <span class="muted">→</span>
         <input type="date" id="toDate" class="sel" />
       </span>
-      <div class="seg" id="sourceFilter">
-        <button data-src="" class="active">All</button>
-        <button data-src="claudeCode">Claude Code</button>
-        <button data-src="copilot">Copilot</button>
-        <button data-src="geminiCli">Gemini CLI</button>
-      </div>
+      <select id="sourceSel" class="sel" title="Source">
+        <option value="">All sources</option>
+        <option value="claudeCode">Claude Code</option>
+        <option value="copilot">Copilot</option>
+        <option value="codex">Codex</option>
+        <option value="opencode">OpenCode</option>
+      </select>
       <button id="syncBtn" class="btn">Sync</button>
       <button id="exportCsvBtn" class="btn">Export CSV</button>
       <button id="exportJsonBtn" class="btn">Export JSON</button>
@@ -76,7 +78,8 @@
     <div class="legend">
       <span><i class="dot cc"></i> Claude Code</span>
       <span><i class="dot cp"></i> Copilot</span>
-      <span><i class="dot gm"></i> Gemini CLI</span>
+      <span><i class="dot cx"></i> Codex</span>
+      <span><i class="dot oc"></i> OpenCode</span>
       <span class="muted">bars = tokens/day, line = cost/day</span>
     </div>
   </section>
@@ -133,7 +136,7 @@
 
   <footer class="foot">
     <span class="foot-item"><span class="key">$X</span> billed (Copilot credits)</span>
-    <span class="foot-item"><span class="key">≈ est</span> Claude Code / Gemini CLI estimate</span>
+    <span class="foot-item"><span class="key">≈ est</span> Claude Code / Codex / OpenCode estimate</span>
     <span class="foot-item"><span class="key">≥</span> floor (partial credit data)</span>
     <span class="foot-item"><span class="key">—</span> no reliable cost → tokens shown</span>
     <span class="foot-item muted">All data read locally · nothing leaves your machine</span>

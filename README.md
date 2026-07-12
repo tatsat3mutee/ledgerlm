@@ -1,10 +1,12 @@
 # LedgerLM - AI Usage & Cost
 
-> AI usage and cost tracking for Claude Code, GitHub Copilot, and Gemini CLI - fully local.
+> AI usage and cost tracking for Claude Code, GitHub Copilot, Codex CLI, and OpenCode - fully local.
 
-A VS Code extension that tracks **token usage for Claude Code, GitHub Copilot, and Gemini CLI** in one place. LedgerLM is token-first, with cost shown only when the data is reliable. It includes a tabbed dashboard (Overview / Sessions / Models / Agents & Tools), time-window filtering, token/cache deep dives, cache-break impact, agent & tool usage analytics, budgets, live updates, and CSV/JSON export.
+A VS Code extension that tracks **token usage for Claude Code, GitHub Copilot, Codex CLI, and OpenCode** in one place. LedgerLM is token-first, with cost shown only when the data is reliable. It includes a tabbed dashboard (Overview / Sessions / Models / Agents & Tools), time-window filtering, token/cache deep dives, cache-break impact, agent & tool usage analytics, budgets, live updates, and CSV/JSON export.
 
-![LedgerLM dashboard - unified token, cache, and cost analytics for Claude Code, GitHub Copilot, and Gemini CLI](https://raw.githubusercontent.com/tatsat3mutee/ledgerlm/main/media/dashboard-dark.png)
+![LedgerLM demo - a tour of the Overview, Sessions, Models, and Agents & Tools tabs](https://raw.githubusercontent.com/tatsat3mutee/ledgerlm/main/media/demo.gif)
+
+![LedgerLM dashboard - unified token, cache, and cost analytics for Claude Code, GitHub Copilot, Codex CLI, and OpenCode](https://raw.githubusercontent.com/tatsat3mutee/ledgerlm/main/media/dashboard-dark.png)
 
 <sub>The LedgerLM panel: per-source cards, token & cache deep dive, latest session, budgets, daily usage chart, and a by-model breakdown. It also follows your VS Code light theme:</sub>
 
@@ -14,16 +16,16 @@ A VS Code extension that tracks **token usage for Claude Code, GitHub Copilot, a
 
 **Your data never leaves your machine.** LedgerLM reads the log files your AI tools already write to disk, computes everything **locally**, and stores results in a local SQLite file inside VS Code's own storage. There are **no servers, no accounts, no outbound network calls, and no telemetry**. Source logs are opened **read-only** and are never modified.
 
-> Token-first by design. AI tools do not bill the same way - Copilot meters *premium-request credits*, Claude Code is commonly a *flat subscription*, and Gemini CLI may be *free-tier*. LedgerLM prioritizes **tokens and cache behavior** (always exact) and shows USD only when confidence is clear. See [Cost methodology](docs/COST-METHODOLOGY.md).
+> Token-first by design. AI tools do not bill the same way - Copilot meters *premium-request credits*, Claude Code is commonly a *flat subscription*, and Codex rides on a *ChatGPT plan*. LedgerLM prioritizes **tokens and cache behavior** (always exact) and shows USD only when confidence is clear. See [Cost methodology](docs/COST-METHODOLOGY.md).
 
 ---
 
 ## Features
 
 ### Unified dashboard
-- **Per-source cards** - tokens, cost (with confidence), credits, and cache-hit for Claude Code, Copilot, and Gemini CLI side by side.
-- **Time window** - All time / 6h / 12h / 24h / 48h / 72h / 7 days / custom date range; filters every panel.
-- **Source filter** - All / Claude Code / Copilot / Gemini CLI.
+- **Per-source cards** - tokens, cost (with confidence), credits, and cache-hit for Claude Code, Copilot, Codex, and OpenCode side by side.
+- **Time window** - All time / 1h / 3h / 6h / 12h / 24h / 48h / 7 days / custom date range; filters every panel.
+- **Source selector** - a dropdown to focus on one tool (Claude Code, Copilot, Codex, OpenCode) or all at once.
 - **Daily chart** - stacked token bars per source + a combined cost line.
 
 ### Token & cache deep dive
@@ -44,7 +46,8 @@ A VS Code extension that tracks **token usage for Claude Code, GitHub Copilot, a
 
 ### Cost - only when trustworthy
 - **Copilot** -> premium-request **AI credits** (`copilotUsageNanoAiu`, $0.01/credit). `≥` marks a floor when some calls predate the credit field.
-- **Claude Code / Gemini CLI** -> **≈ API-equivalent estimate** from bundled price tables (you likely pay a flat subscription - or nothing on Gemini's free tier - so it is labeled `est`; hide it with `ledgerLM.showEstimatedCost`).
+- **Claude Code / Codex** -> **≈ API-equivalent estimate** from bundled price tables (you likely pay a flat subscription, so it is labeled `est`; hide it with `ledgerLM.showEstimatedCost`).
+- **OpenCode** -> the **per-message cost OpenCode itself records** (provider list price) - shown as an estimate since it is not a bill.
 - **`—`** → no reliable cost; tokens are shown instead. Unpriced models are excluded from totals.
 
 ### Budgets, live, export
@@ -56,11 +59,11 @@ A VS Code extension that tracks **token usage for Claude Code, GitHub Copilot, a
 
 ## Where the data comes from / where it's stored
 
-| | Claude Code | GitHub Copilot | Gemini CLI |
-|---|---|---|---|
-| Source logs (read-only) | `~/.claude/projects/<cwd>/<uuid>.jsonl` (+ `…/<uuid>/subagents/agent-*.jsonl`) | VS Code `workspaceStorage/<hash>/GitHub.copilot-chat/debug-logs/<sid>/main.jsonl` (+ `system_prompt_*.json`, `tools_*.json`, `models.json`) | `~/.gemini/tmp/<project_hash>/chats/session-*.json(l)` (+ subagent files) |
-| Per-call usage | `message.usage.{input_tokens, cache_read_input_tokens, cache_creation_input_tokens, output_tokens}` | `attrs.{inputTokens, cachedTokens, outputTokens, copilotUsageNanoAiu, systemPromptFile, toolsFile}` | `tokens.{input, output, cached, thoughts, tool}` |
-| Cost signal | bundled Anthropic price table → estimate | `copilotUsageNanoAiu` → credits → USD | bundled Gemini price table → estimate |
+| | Claude Code | GitHub Copilot | Codex CLI | OpenCode |
+|---|---|---|---|---|
+| Source logs (read-only) | `~/.claude/projects/<cwd>/<uuid>.jsonl` (+ `…/<uuid>/subagents/agent-*.jsonl`) | VS Code `workspaceStorage/<hash>/GitHub.copilot-chat/debug-logs/<sid>/main.jsonl` (+ `system_prompt_*.json`, `tools_*.json`, `models.json`) | `~/.codex/sessions/<Y>/<M>/<D>/rollout-*.jsonl` | `~/.local/share/opencode/**/storage/session/message/<sid>/*.json` (+ `session/info/<sid>.json`) |
+| Per-call usage | `message.usage.{input_tokens, cache_read_input_tokens, cache_creation_input_tokens, output_tokens}` | `attrs.{inputTokens, cachedTokens, outputTokens, copilotUsageNanoAiu, systemPromptFile, toolsFile}` | `token_count` events: `{input_tokens, cached_input_tokens, output_tokens, reasoning_output_tokens}` | `tokens.{input, output, reasoning, cache.{read, write}}` |
+| Cost signal | bundled Anthropic price table → estimate | `copilotUsageNanoAiu` → credits → USD | bundled OpenAI price table → estimate | `cost` recorded per message → estimate |
 
 Computed data lives in a local `sql.js` SQLite file under the extension's VS Code `globalStorage` (`ai-cost.db`). Source logs are never modified. See [Architecture](docs/ARCHITECTURE.md).
 
@@ -90,13 +93,14 @@ Open the dashboard from the activity-bar icon, the status bar item, or `LedgerLM
 
 | Setting | Default | Description |
 |---|---|---|
-| `ledgerLM.sources` | `["claudeCode","copilot","geminiCli"]` | Which tools to track. |
+| `ledgerLM.sources` | `["claudeCode","copilot","codex","opencode"]` | Which tools to track. |
 | `ledgerLM.autoSyncOnStartup` | `true` | Sync on VS Code start. |
 | `ledgerLM.liveTracking` | `true` | Watch logs and refresh as you work. |
 | `ledgerLM.claudeCodeHome` | `""` | Override `~/.claude` (or set `$CLAUDE_CONFIG_DIR`). |
-| `ledgerLM.geminiCliHome` | `""` | Override `~/.gemini` (or set `$GEMINI_CLI_HOME`). |
+| `ledgerLM.codexHome` | `""` | Override `~/.codex` (or set `$CODEX_HOME`). |
+| `ledgerLM.opencodeHome` | `""` | Override `~/.local/share/opencode`. |
 | `ledgerLM.cacheWriteTtl` | `5m` | Cache-write pricing tier for Claude Code estimates (5m = 1.25×, 1h = 2×). |
-| `ledgerLM.showEstimatedCost` | `true` | Show Claude Code / Gemini CLI estimates. Off → tokens only, no USD. |
+| `ledgerLM.showEstimatedCost` | `true` | Show Claude Code / Codex / OpenCode estimates. Off → tokens only, no USD. |
 | `ledgerLM.budget.dailyUSD` / `weeklyUSD` | `0` | Spend thresholds (0 = off). |
 | `ledgerLM.debugLogging` | `false` | Verbose output channel. |
 

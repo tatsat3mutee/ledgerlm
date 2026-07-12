@@ -3,19 +3,20 @@
  * parses changed files incrementally, computes per-call cost, and persists.
  *
  * All sources normalize to the same call shape, so everything below is source-agnostic
- * except the pricing lookup (Copilot: per-session models.json; Claude Code and Gemini
- * CLI: bundled tables).
+ * except the cost basis (Copilot: AI credits; Claude Code / Codex: bundled price
+ * tables; OpenCode: cost recorded per message by the tool itself).
  */
 
 const fs = require('fs');
 const copilot = require('../sources/copilot');
 const claudeCode = require('../sources/claudeCode');
-const geminiCli = require('../sources/geminiCli');
+const codex = require('../sources/codex');
+const opencode = require('../sources/opencode');
 const { computeCallCost } = require('../compute/cost');
-const { getClaudePricing, getGeminiPricing } = require('../compute/pricing');
+const { getClaudePricing, getOpenAIPricing } = require('../compute/pricing');
 const log = require('../utils/logger');
 
-const PARSER_VERSION = 7; // bump to force a full re-sync when parsing logic changes
+const PARSER_VERSION = 8; // bump to force a full re-sync when parsing logic changes
 
 /**
  * Analyze cache breaks across a session's calls (in order). A break = a call that had a
@@ -60,8 +61,9 @@ function costConfidence(source, calls) {
     if (withAiu === calls.length) return 'billed';
     return 'partial';                        // some calls lack credits -> floor, not exact
   }
-  // Claude Code / Gemini CLI: priced from a bundled table -> an estimate (or none if
-  // nothing matched).
+  // Claude Code / Codex: priced from a bundled table; OpenCode: cost recorded by the
+  // tool from provider list prices. Either way it's an estimate (or none if nothing
+  // was priced).
   const anyPriced = calls.some((c) => (c.cost || 0) > 0);
   return anyPriced ? 'estimate' : 'none';
 }
@@ -70,20 +72,21 @@ let _syncing = false;
 
 /**
  * @param {import('./db').Database} db
- * @param {{sources:string[], claudeCodeHome?:string, geminiCliHome?:string, cacheWriteTtl?:string}} config
+ * @param {{sources:string[], claudeCodeHome?:string, codexHome?:string, opencodeHome?:string, cacheWriteTtl?:string}} config
  * @returns {Promise<{synced:number, skipped:number, errors:number}>}
  */
 async function fullSync(db, config) {
   if (_syncing) return { synced: 0, skipped: 0, errors: 0 };
   _syncing = true;
-  const sources = config.sources || ['claudeCode', 'copilot', 'geminiCli'];
+  const sources = config.sources || ['claudeCode', 'copilot', 'codex', 'opencode'];
   let synced = 0, skipped = 0, errors = 0;
 
   try {
     const descriptors = [];
     if (sources.includes('claudeCode')) descriptors.push(...claudeCode.discover(config.claudeCodeHome));
     if (sources.includes('copilot')) descriptors.push(...copilot.discover());
-    if (sources.includes('geminiCli')) descriptors.push(...geminiCli.discover(config.geminiCliHome));
+    if (sources.includes('codex')) descriptors.push(...codex.discover(config.codexHome));
+    if (sources.includes('opencode')) descriptors.push(...opencode.discover(config.opencodeHome));
 
     for (const d of descriptors) {
       try {
@@ -132,7 +135,8 @@ function syncSession(db, d, config) {
 
   let parsed;
   if (d.source === 'copilot') parsed = copilot.parse(d.sourcePath);
-  else if (d.source === 'geminiCli') parsed = geminiCli.parse(d.sourcePath, d.subFiles);
+  else if (d.source === 'codex') parsed = codex.parse(d.sourcePath);
+  else if (d.source === 'opencode') parsed = opencode.parse(d.sourcePath, d.subFiles, d._info);
   else parsed = claudeCode.parse(d.sourcePath, d.subFiles);
 
   if (!parsed.calls.length) return false;
@@ -150,16 +154,19 @@ function syncSession(db, d, config) {
     // Cost basis differs by source:
     //  - Copilot bills via premium-request AI credits (copilotUsageNanoAiu). When present,
     //    USD = aiu/1e11 and credits = aiu/1e9. Older calls lack it -> fall back to token pricing.
-    //  - Claude Code / Gemini CLI have no bill; we estimate API-equivalent USD from bundled
+    //  - Claude Code / Codex have no bill; we estimate API-equivalent USD from bundled
     //    price tables.
+    //  - OpenCode records a per-message cost itself (provider list price); we use it as-is.
     call.credits = (call.aiu || 0) / 1e9;
     if (d.source === 'copilot') {
       // Only the AI-credit figure is trustworthy for Copilot. Calls without it contribute
       // tokens but no USD (we'd rather show no number than a wrong one).
       call.cost = call.aiu > 0 ? call.aiu / 1e11 : 0;
       if (!(call.aiu > 0) && !copilotPricing.get(call.model)) agg.unknown = true;
+    } else if (d.source === 'opencode') {
+      call.cost = call.cost || 0; // recorded by the tool per message
     } else {
-      const pricing = d.source === 'geminiCli' ? getGeminiPricing(call.model) : getClaudePricing(call.model);
+      const pricing = d.source === 'codex' ? getOpenAIPricing(call.model) : getClaudePricing(call.model);
       if (!pricing) agg.unknown = true;
       call.cost = computeCallCost(call, pricing, { cacheWriteTtl: config.cacheWriteTtl });
     }
@@ -173,7 +180,11 @@ function syncSession(db, d, config) {
     agg.models.add(call.model);
   }
 
-  const workspace = d.source === 'claudeCode' ? (parsed.workspace || d.projectDirName) : d.workspace;
+  // Workspace: Claude Code and Codex resolve it during parse (cwd in the log);
+  // Copilot and OpenCode resolve it during discovery.
+  const workspace = d.source === 'claudeCode' ? (parsed.workspace || d.projectDirName)
+    : d.source === 'codex' ? (parsed.workspace || d.workspace)
+    : d.workspace;
   const breaks = analyzeCacheBreaks(parsed.calls);
   const confidence = costConfidence(d.source, parsed.calls);
 

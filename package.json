@@ -1,8 +1,8 @@
 {
   "name": "ledgerlm",
   "displayName": "LedgerLM - AI Usage & Cost",
-  "description": "Local token usage and cache analytics for Claude Code, GitHub Copilot, and Gemini CLI. No cloud sync, no telemetry, and no outbound requests.",
-  "version": "0.8.1",
+  "description": "Local token usage and cache analytics for Claude Code, GitHub Copilot, Codex CLI, and OpenCode. No cloud sync, no telemetry, and no outbound requests.",
+  "version": "0.9.0",
   "publisher": "TatsatP",
   "license": "MIT",
   "icon": "media/icon.png",
@@ -35,8 +35,9 @@
     "claude",
     "claude code",
     "copilot",
-    "gemini",
-    "gemini cli",
+    "codex",
+    "codex cli",
+    "opencode",
     "tokens",
     "cost",
     "usage",
@@ -85,7 +86,7 @@
     "viewsWelcome": [
       {
         "view": "ledgerLMPanel",
-        "contents": "Open the local LedgerLM dashboard for Claude Code, Copilot, and Gemini CLI usage.\n\n[$(graph) Open Dashboard](command:ledgerLM.openPanel)"
+        "contents": "Open the local LedgerLM dashboard for Claude Code, Copilot, Codex, and OpenCode usage.\n\n[$(graph) Open Dashboard](command:ledgerLM.openPanel)"
       }
     ],
     "configuration": {
@@ -93,8 +94,8 @@
       "properties": {
         "ledgerLM.sources": {
           "type": "array",
-          "items": { "type": "string", "enum": ["claudeCode", "copilot", "geminiCli"] },
-          "default": ["claudeCode", "copilot", "geminiCli"],
+          "items": { "type": "string", "enum": ["claudeCode", "copilot", "codex", "opencode"] },
+          "default": ["claudeCode", "copilot", "codex", "opencode"],
           "description": "Which AI tools to track."
         },
         "ledgerLM.autoSyncOnStartup": {
@@ -112,10 +113,15 @@
           "default": "",
           "description": "Override path to the Claude Code home directory (defaults to ~/.claude, or $CLAUDE_CONFIG_DIR)."
         },
-        "ledgerLM.geminiCliHome": {
+        "ledgerLM.codexHome": {
           "type": "string",
           "default": "",
-          "description": "Override path to the Gemini CLI home directory (defaults to ~/.gemini, or $GEMINI_CLI_HOME)."
+          "description": "Override path to the Codex CLI home directory (defaults to ~/.codex, or $CODEX_HOME)."
+        },
+        "ledgerLM.opencodeHome": {
+          "type": "string",
+          "default": "",
+          "description": "Override path to the OpenCode data directory (defaults to ~/.local/share/opencode)."
         },
         "ledgerLM.cacheWriteTtl": {
           "type": "string",
@@ -126,7 +132,7 @@
         "ledgerLM.showEstimatedCost": {
           "type": "boolean",
           "default": true,
-          "description": "Show API-equivalent cost estimates for Claude Code and Gemini CLI. When off, those sources show tokens only (no USD), since you may pay a flat subscription (or nothing on free tiers) rather than per token."
+          "description": "Show cost estimates for Claude Code, Codex, and OpenCode. When off, those sources show tokens only (no USD), since you may pay a flat subscription (or nothing on free tiers) rather than per token."
         },
         "ledgerLM.budget.dailyUSD": {
           "type": "number",

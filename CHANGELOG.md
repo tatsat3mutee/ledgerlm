@@ -2,6 +2,20 @@
 
 All notable changes. Versions are `0.x` while in active development.
 
+## 0.9.0
+
+### Added - Codex CLI and OpenCode as sources
+- **Codex CLI tracking** - reads rollout session files from `~/.codex/sessions/<Y>/<M>/<D>/rollout-*.jsonl` (`token_count` events, model from `turn_context`, workspace from `session_meta.cwd`). Codex doesn't record cost, so USD is an **≈ API-equivalent estimate** from a bundled OpenAI price table (GPT-5 family, codex-mini, GPT-4.1, o3/o4-mini). OpenAI caching is implicit: cached reads bill at ~10% of input and there is **no cache-write fee**. New setting `ledgerLM.codexHome` (or `$CODEX_HOME`).
+- **OpenCode tracking** - reads session storage from `~/.local/share/opencode` (both the global and per-project `storage/session/` layouts). OpenCode records **cost and full token splits itself** (`tokens.{input,output,reasoning,cache.{read,write}}`) - the only estimate-class source with real cache-write counts. Session title/workspace come from `session/info/`. New setting `ledgerLM.opencodeHome`.
+- **UI** - Codex (green) and OpenCode (amber) source filters, cards, chart series, legend entries, and source tags.
+
+### Changed - filter controls
+- **Source selector is now a dropdown** (All sources / Claude Code / Copilot / Codex / OpenCode) instead of a button row, keeping the toolbar compact with four sources.
+- **Time window presets** are now 1h / 3h / 6h / 12h / 24h / 48h (plus All time, 7 days, and custom range).
+
+### Removed - Gemini CLI source
+- Gemini CLI tracking (parser, bundled price table, `ledgerLM.geminiCliHome` setting, UI series) has been removed in favor of the two new sources. Previously synced Gemini sessions disappear on the next full re-sync (parser version bump).
+
 ## 0.8.1
 
 ### Fixed - documentation

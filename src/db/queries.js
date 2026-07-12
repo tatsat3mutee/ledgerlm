@@ -1,6 +1,6 @@
 /**
  * @fileoverview Read queries for the dashboard, status bar, and export.
- * Optional filters: `source` ('claudeCode'|'copilot'|'geminiCli'|undefined) and a time window
+ * Optional filters: `source` ('claudeCode'|'copilot'|'codex'|'opencode'|undefined) and a time window
  * (`fromTs`/`toTs`, unix seconds). When the window is omitted, all data is returned
  * (including calls whose timestamp is null).
  */

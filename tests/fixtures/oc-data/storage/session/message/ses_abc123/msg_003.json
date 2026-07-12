@@ -1,0 +1,10 @@
+{
+  "id": "msg_003",
+  "role": "assistant",
+  "sessionID": "ses_abc123",
+  "time": { "created": 1767963600000 },
+  "modelID": "gpt-5.1",
+  "providerID": "opencode",
+  "cost": 0,
+  "tokens": { "input": 700, "output": 150, "reasoning": 25, "cache": { "read": 0, "write": 0 } }
+}

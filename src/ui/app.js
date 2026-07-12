@@ -35,8 +35,8 @@
   // --- formatters ---
   const fmtUSD = (n) => (n == null || isNaN(n)) ? '$0.00' : (n > 0 && n < 0.01 ? '<$0.01' : '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
   const fmtTok = (n) => !n ? '0' : n >= 1e9 ? (n / 1e9).toFixed(2) + 'B' : n >= 1e6 ? (n / 1e6).toFixed(2) + 'M' : n >= 1e3 ? (n / 1e3).toFixed(1) + 'K' : '' + n;
-  const SRC = { claudeCode: 'Claude Code', copilot: 'Copilot', geminiCli: 'Gemini CLI' };
-  const SRC_ABBR = { claudeCode: 'cc', copilot: 'cp', geminiCli: 'gm' };
+  const SRC = { claudeCode: 'Claude Code', copilot: 'Copilot', codex: 'Codex', opencode: 'OpenCode' };
+  const SRC_ABBR = { claudeCode: 'cc', copilot: 'cp', codex: 'cx', opencode: 'oc' };
   const srcAbbr = (s) => SRC_ABBR[s] || 'cc';
   function when(ts) {
     if (!ts) return '—';
@@ -56,7 +56,7 @@
       .replace(/\s+/g, ' ').trim();
     return s || '(untitled)';
   }
-  function shortId(sessionId) { return String(sessionId || '').replace(/^(cc:|cp:|gm:)/, ''); }
+  function shortId(sessionId) { return String(sessionId || '').replace(/^(cc:|cp:|cx:|oc:)/, ''); }
   function cacheHit(fresh, cached) {
     const denom = (fresh || 0) + (cached || 0);
     return denom > 0 ? Math.round((cached / denom) * 100) : 0;
@@ -142,11 +142,9 @@
   function params() { return Object.assign({ source: currentSource || undefined }, windowRange()); }
 
   // --- wiring ---
-  $('sourceFilter').addEventListener('click', (e) => {
-    const btn = e.target.closest('button');
-    if (!btn) return;
-    currentSource = btn.dataset.src || '';
-    [...e.currentTarget.children].forEach((b) => b.classList.toggle('active', b === btn));
+  const sourceSel = $('sourceSel');
+  sourceSel.addEventListener('change', () => {
+    currentSource = sourceSel.value || '';
     saveState();
     refresh();
   });
@@ -240,7 +238,7 @@
       : '<tr><td colspan="6" class="muted">No tool calls in this window.</td></tr>';
     const sk = skills.concat(hooks);
     document.querySelector('#skillsTable tbody').innerHTML = sk.length
-      ? sk.map((r) => `<tr><td><span class="src-tag ${r.kind === 'skill' ? 'gm' : 'cp'}">${r.kind}</span></td><td>${esc(r.name)}</td><td class="num">${r.calls}</td><td class="num">${fmtAvg(r)}</td><td>${fmtWhen(r.last_ts)}</td></tr>`).join('')
+      ? sk.map((r) => `<tr><td><span class="src-tag ${r.kind === 'skill' ? 'oc' : 'cp'}">${r.kind}</span></td><td>${esc(r.name)}</td><td class="num">${r.calls}</td><td class="num">${fmtAvg(r)}</td><td>${fmtWhen(r.last_ts)}</td></tr>`).join('')
       : '<tr><td colspan="5" class="muted">No skill or hook activity in this window.</td></tr>';
   }
 
@@ -509,11 +507,11 @@
     ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
     ctx.clearRect(0, 0, cssW, cssH);
 
-    const SRCS = ['claudeCode', 'copilot', 'geminiCli'];
-    const COLORS = { claudeCode: '#e07b4f', copilot: '#58a6ff', geminiCli: '#34c7b5' };
+    const SRCS = ['claudeCode', 'copilot', 'codex', 'opencode'];
+    const COLORS = { claudeCode: '#e07b4f', copilot: '#58a6ff', codex: '#3fb68b', opencode: '#e3b341' };
     const byDay = new Map();
     for (const r of daily) {
-      if (!byDay.has(r.day)) byDay.set(r.day, { claudeCode: { t: 0, c: 0 }, copilot: { t: 0, c: 0 }, geminiCli: { t: 0, c: 0 } });
+      if (!byDay.has(r.day)) byDay.set(r.day, { claudeCode: { t: 0, c: 0 }, copilot: { t: 0, c: 0 }, codex: { t: 0, c: 0 }, opencode: { t: 0, c: 0 } });
       const e = byDay.get(r.day);
       if (e[r.source]) { e[r.source].t += r.tokens || 0; e[r.source].c += r.cost_usd || 0; }
     }
@@ -549,7 +547,7 @@
   // Restore persisted filters (webview state survives reloads / tab hides).
   if (saved.window) { windowSel.value = saved.window; customRange.classList.toggle('hidden', saved.window !== 'custom'); }
   if (saved.search) $('search').value = saved.search;
-  [...$('sourceFilter').children].forEach((b) => b.classList.toggle('active', (b.dataset.src || '') === currentSource));
+  sourceSel.value = currentSource;
 
   refresh();
 })();

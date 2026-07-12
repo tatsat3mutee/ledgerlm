@@ -6,14 +6,14 @@ Tokens are the exact, source-of-truth signal in this extension. This page explai
 
 Every LLM call is normalized to four token counts:
 
-| Type | Claude Code field | Copilot derivation | Gemini CLI derivation | Meaning |
-|---|---|---|---|---|
-| **Fresh input** | `usage.input_tokens` | `inputTokens − cachedTokens` | `max(0, tokens.input − tokens.cached) + tokens.tool` | New prompt tokens processed at full price. |
-| **Cached read** | `usage.cache_read_input_tokens` | `cachedTokens` | `tokens.cached` | Prompt prefix served from cache (~0.1× input cost; ~0.25× for Gemini). |
-| **Cache write** | `usage.cache_creation_input_tokens` | (not exposed) | always 0 (implicit caching, no write fee) | Tokens written into the cache (1.25×/2× input). |
-| **Output** | `usage.output_tokens` | `outputTokens` | `tokens.output + tokens.thoughts` | Generated tokens (Gemini "thoughts" are thinking tokens, billed as output). |
+| Type | Claude Code field | Copilot derivation | Codex CLI derivation | OpenCode field | Meaning |
+|---|---|---|---|---|---|
+| **Fresh input** | `usage.input_tokens` | `inputTokens − cachedTokens` | `input_tokens − cached_input_tokens` | `tokens.input` | New prompt tokens processed at full price. |
+| **Cached read** | `usage.cache_read_input_tokens` | `cachedTokens` | `cached_input_tokens` | `tokens.cache.read` | Prompt prefix served from cache (~0.1× input cost). |
+| **Cache write** | `usage.cache_creation_input_tokens` | (not exposed) | always 0 (implicit caching, no write fee) | `tokens.cache.write` | Tokens written into the cache (1.25×/2× input). |
+| **Output** | `usage.output_tokens` | `outputTokens` | `output_tokens` (includes reasoning) | `tokens.output` | Generated tokens (reasoning/thinking tokens bill as output). |
 
-> Important difference: Anthropic's `input_tokens` **excludes** cached reads, while Copilot's `inputTokens` and Gemini CLI's `tokens.input` **include** them — so for those sources we subtract cached tokens to get fresh input. This is handled in each source parser.
+> Important difference: Anthropic's `input_tokens` and OpenCode's `tokens.input` **exclude** cached reads, while Copilot's `inputTokens` and Codex's `input_tokens` **include** them — so for those sources we subtract cached tokens to get fresh input. This is handled in each source parser.
 
 ## Cache hit & efficiency
 
@@ -38,7 +38,7 @@ Why caches break (prefix-cache rules: any byte change in the prefix invalidates 
 
 The dashboard surfaces a **cache-breaks count** per session and in the deep-dive panel, **classified by cause** (`model switch` / `sys-prompt change` / `tools changed` / `eviction`). It also shows **cache-break token impact**: the fresh input tokens on break calls, which approximates how many prompt tokens were re-sent at full price because the warm prefix was lost. Classification uses the model id plus Copilot's `systemPromptFile`/`toolsFile` sidecar references between consecutive calls. Claude Code sessions typically show few breaks (its prefix stays stable); Copilot shows more because it rebuilds prompts/tools more often.
 
-> **Gemini CLI caveat:** Gemini uses *implicit* caching managed server-side — there are no explicit cache writes or TTLs to lose, so "cache break" semantics are weaker for this source. A drop to 0 cached tokens usually just means the implicit cache didn't match, not that a paid warm cache was evicted (and there's no cache-write fee to waste). Treat Gemini cache-break counts as informational only.
+> **Codex CLI caveat:** OpenAI uses *implicit* prompt caching managed server-side — there are no explicit cache writes or TTLs to lose, so "cache break" semantics are weaker for this source. A drop to 0 cached tokens usually just means the implicit cache didn't match, not that a paid warm cache was evicted (and there's no cache-write fee to waste). Treat Codex cache-break counts as informational only. OpenCode's cache fields follow whichever provider the call went through, so Anthropic-backed calls have full cache-write semantics.
 
 ## Relationship to VS Code's Agent Debug / Cache Explorer
 
@@ -58,7 +58,7 @@ GitHub.copilot-chat/debug-logs/<session>/
 **How this extension differs and complements it:**
 
 - **Cache Explorer:** precise, structural, but only for the current/recent Copilot sessions and Copilot only.
-- **LedgerLM:** token-count + file-reference heuristics (less byte-precise), but adds **historical persistence** (survives log cleanup, stored in SQLite), **cross-session aggregates** (cache-break counts and token impact over a time window), and **cross-tool coverage** (Claude Code, Copilot, *and* Gemini CLI in one view).
+- **LedgerLM:** token-count + file-reference heuristics (less byte-precise), but adds **historical persistence** (survives log cleanup, stored in SQLite), **cross-session aggregates** (cache-break counts and token impact over a time window), and **cross-tool coverage** (Claude Code, Copilot, Codex, *and* OpenCode in one view).
 
 Use Cache Explorer to debug *why a specific request* broke the cache; use LedgerLM to see *patterns and totals* over time and across all your AI tools.
 

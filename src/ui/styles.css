@@ -6,7 +6,8 @@
   --grad: linear-gradient(120deg, var(--accent), var(--accent-2));
   --cc: #e07b4f;              /* Claude Code — Anthropic clay */
   --cp: #58a6ff;              /* Copilot — GitHub blue */
-  --gm: #34c7b5;              /* Gemini CLI — teal */
+  --cx: #3fb68b;              /* Codex — OpenAI green */
+  --oc: #e3b341;              /* OpenCode — amber */
   --card-bg: var(--vscode-editorWidget-background, #1e1e1e);
   --border: var(--vscode-widget-border, rgba(128,128,128,.25));
 }
@@ -72,17 +73,6 @@ body {
 #syncBtn { background: var(--grad); color: #14101f; border-color: transparent; font-weight: 650; }
 #syncBtn:hover { filter: brightness(1.1); box-shadow: 0 0 14px rgba(167,139,250,.35); }
 
-.seg {
-  display: inline-flex; padding: 3px;
-  background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px;
-}
-.seg button {
-  background: transparent; color: var(--vscode-descriptionForeground);
-  border: none; padding: 5px 12px; cursor: pointer; border-radius: 6px;
-  font-size: 12px; transition: all .12s ease;
-}
-.seg button.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
-
 .status {
   padding: 7px 12px; margin-bottom: 14px; border-radius: 6px;
   background: var(--accent-soft); color: var(--accent); font-size: 12px;
@@ -115,18 +105,20 @@ body {
   width: fit-content;
 }
 .card .sub { font-size: 11.5px; color: var(--vscode-descriptionForeground); margin-top: 5px; }
-.card.src-cc, .card.src-cp, .card.src-gm { border-left: none; }
-.card.src-cc::before, .card.src-cp::before, .card.src-gm::before {
+.card.src-cc, .card.src-cp, .card.src-cx, .card.src-oc { border-left: none; }
+.card.src-cc::before, .card.src-cp::before, .card.src-cx::before, .card.src-oc::before {
   content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
 }
 .card.src-cc::before { background: var(--cc); }
 .card.src-cp::before { background: var(--cp); }
-.card.src-gm::before { background: var(--gm); }
+.card.src-cx::before { background: var(--cx); }
+.card.src-oc::before { background: var(--oc); }
 .card.src-cc:hover { border-color: rgba(224,123,79,.5); box-shadow: 0 6px 18px rgba(224,123,79,.14); }
 .card.src-cp:hover { border-color: rgba(88,166,255,.5); box-shadow: 0 6px 18px rgba(88,166,255,.14); }
-.card.src-gm:hover { border-color: rgba(52,199,181,.5); box-shadow: 0 6px 18px rgba(52,199,181,.14); }
-.card.src-cc::after, .card.src-cp::after, .card.src-gm::after { content: none; }
-.card.src-cc .big, .card.src-cp .big, .card.src-gm .big { background: none; color: var(--vscode-foreground); }
+.card.src-cx:hover { border-color: rgba(63,182,139,.5); box-shadow: 0 6px 18px rgba(63,182,139,.14); }
+.card.src-oc:hover { border-color: rgba(227,179,65,.5); box-shadow: 0 6px 18px rgba(227,179,65,.14); }
+.card.src-cc::after, .card.src-cp::after, .card.src-cx::after, .card.src-oc::after { content: none; }
+.card.src-cc .big, .card.src-cp .big, .card.src-cx .big, .card.src-oc .big { background: none; color: var(--vscode-foreground); }
 .badge {
   font-size: 9.5px; padding: 1px 6px; border-radius: 10px; margin-left: 6px;
   background: var(--accent-soft); color: var(--accent); vertical-align: middle; font-weight: 600;
@@ -160,7 +152,7 @@ body {
 
 .legend { display: flex; gap: 18px; align-items: center; margin-top: 10px; font-size: 11px; color: var(--vscode-descriptionForeground); }
 .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
-.dot.cc { background: var(--cc); } .dot.cp { background: var(--cp); } .dot.gm { background: var(--gm); }
+.dot.cc { background: var(--cc); } .dot.cp { background: var(--cp); } .dot.cx { background: var(--cx); } .dot.oc { background: var(--oc); }
 canvas#chart { width: 100%; height: 150px; display: block; }
 
 /* ---------- tables ---------- */
@@ -173,7 +165,8 @@ td.ws { max-width: clamp(100px, 16vw, 260px); overflow: hidden; }
 .src-tag { font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 600; }
 .src-tag.cc { background: rgba(224,123,79,.18); color: var(--cc); }
 .src-tag.cp { background: rgba(88,166,255,.18); color: var(--cp); }
-.src-tag.gm { background: rgba(52,199,181,.18); color: var(--gm); }
+.src-tag.cx { background: rgba(63,182,139,.18); color: var(--cx); }
+.src-tag.oc { background: rgba(227,179,65,.18); color: var(--oc); }
 .est { font-size: 9.5px; color: var(--vscode-descriptionForeground); }
 
 .search {

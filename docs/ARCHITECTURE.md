@@ -5,27 +5,31 @@ flowchart TB
     subgraph logs ["Local log files (read-only)"]
         CC["~/.claude/projects/**.jsonl<br/>Claude Code"]
         CP["workspaceStorage/**/main.jsonl + sidecars<br/>GitHub Copilot"]
-        GM["~/.gemini/tmp/**/chats/session-*.json(l)<br/>Gemini CLI"]
+        CX["~/.codex/sessions/**/rollout-*.jsonl<br/>Codex CLI"]
+        OC["~/.local/share/opencode/**/storage/session/**<br/>OpenCode"]
     end
 
     subgraph sources ["src/sources/* — discover() + parse()"]
         SCC["claudeCode/index.js"]
         SCP["copilot/index.js"]
-        SGM["geminiCli/index.js"]
+        SCX["codex/index.js"]
+        SOC["opencode/index.js"]
     end
 
     CC --> SCC
     CP --> SCP
-    GM --> SGM
+    CX --> SCX
+    OC --> SOC
 
     SCC --> NORM
     SCP --> NORM
-    SGM --> NORM
+    SCX --> NORM
+    SOC --> NORM
 
-    NORM["normalized call<br/>{ ts, model, inputFresh, cacheRead, cacheWrite,<br/>output, aiu?, systemPromptFile?, toolsFile?, isSubagent }"]
+    NORM["normalized call<br/>{ ts, model, inputFresh, cacheRead, cacheWrite,<br/>output, aiu?, cost?, systemPromptFile?, toolsFile?, isSubagent }"]
 
     NORM --> SYNC["src/db/sync.js<br/>per-call cost + confidence + cache-break detection"]
-    SYNC -.-> COST["src/compute/cost.js + pricing.js<br/>Claude / Gemini estimates"]
+    SYNC -.-> COST["src/compute/cost.js + pricing.js<br/>Claude / OpenAI estimates"]
     SYNC -.-> AIU["AI credits<br/>Copilot, aiu / 1e11"]
 
     SYNC --> DB[("src/db/db.js — sql.js<br/>sessions · llm_calls · sync_log · budget_alerts")]
@@ -42,9 +46,9 @@ flowchart TB
 | `src/sources/<source>/index.js` | Discover sessions and parse logs into the normalized call shape. |
 | `src/sources/<source>/paths.js` | Resolve each tool's log location cross-platform. |
 | `src/sources/claudeCode/pricing.json` | Bundled Anthropic base prices (update when prices change). |
-| `src/sources/geminiCli/pricing.json` | Bundled Gemini base prices (update when prices change). |
+| `src/sources/codex/pricing.json` | Bundled OpenAI base prices (update when prices change). |
 | `src/compute/cost.js` | Source-agnostic per-call cost from a pricing record. |
-| `src/compute/pricing.js` | Claude + Gemini family pricing lookups. |
+| `src/compute/pricing.js` | Claude + OpenAI family pricing lookups. |
 | `src/compute/budget.js` | Today/week spend + one-shot budget alerts. |
 | `src/compute/exportReport.js` | CSV/JSON export rows. |
 | `src/db/db.js` | sql.js connection + additive column migrations. |
@@ -69,4 +73,4 @@ flowchart TB
 - **`sync_log`** — incremental-sync bookkeeping (file → mtime/size/parser_version).
 - **`budget_alerts`** — fired-once markers per period.
 
-Session ids are source-prefixed (`cc:<uuid>` / `cp:<sid>` / `gm:<id>`) so sessions from different tools never collide.
+Session ids are source-prefixed (`cc:<uuid>` / `cp:<sid>` / `cx:<uuid>` / `oc:<id>`) so sessions from different tools never collide.

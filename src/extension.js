@@ -59,11 +59,12 @@ function getConfigValue(key, fallback) {
 
 function readConfig() {
   return {
-    sources: getConfigValue('sources', ['claudeCode', 'copilot', 'geminiCli']),
+    sources: getConfigValue('sources', ['claudeCode', 'copilot', 'codex', 'opencode']),
     autoSyncOnStartup: getConfigValue('autoSyncOnStartup', true),
     liveTracking: getConfigValue('liveTracking', true),
     claudeCodeHome: getConfigValue('claudeCodeHome', '') || undefined,
-    geminiCliHome: getConfigValue('geminiCliHome', '') || undefined,
+    codexHome: getConfigValue('codexHome', '') || undefined,
+    opencodeHome: getConfigValue('opencodeHome', '') || undefined,
     cacheWriteTtl: getConfigValue('cacheWriteTtl', '5m'),
     showEstimatedCost: getConfigValue('showEstimatedCost', true),
     'budget.dailyUSD': getConfigValue('budget.dailyUSD', 0),
@@ -289,7 +290,7 @@ function sidebarHtml() {
     button{margin-top:10px;padding:6px 12px;cursor:pointer}
   </style></head><body>
     <h3>LedgerLM</h3>
-    <p>Claude Code, Copilot, and Gemini CLI token usage.</p>
+    <p>Claude Code, Copilot, Codex, and OpenCode token usage.</p>
     <button onclick="acquireVsCodeApi().postMessage('open')">Open Dashboard</button>
   </body></html>`;
 }
